@@ -23,5 +23,11 @@ services:
     container_name: frontend
     ports:
       - '3000:3000'
+
+  parser:
+    build: ./parser
+    container_name: parser
+    depends_on:
+      - backend
 volumes:
   pgdbdata: null

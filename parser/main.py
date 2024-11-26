@@ -1,5 +1,7 @@
 import psycopg2
+import requests
 from psycopg2 import sql
+from samba.dcerpc.dcerpc import request
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -42,6 +44,7 @@ def read_json(file_path):
         print(f"Error reading JSON file: {e}")
         return {}
 
+
 # Database connection
 def get_db_connection():
     conn = psycopg2.connect(
@@ -53,6 +56,7 @@ def get_db_connection():
     )
     return conn
 
+
 def read_items():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -61,6 +65,7 @@ def read_items():
     cur.close()
     conn.close()
     return items
+
 
 def write_items(items):
     conn = get_db_connection()
@@ -77,6 +82,7 @@ def write_items(items):
     conn.commit()
     cur.close()
     conn.close()
+
 
 def parse_cat_page(url, cat_name, all_items):
     try:
@@ -131,8 +137,14 @@ def parse_cat_page(url, cat_name, all_items):
                         all_items[idx_counter][4] = all_items[idx_counter][5]  # last_price = price
                         all_items[idx_counter][5] = int(real_price)  # price = new price
                         if all_items[idx_counter][4] > all_items[idx_counter][5]:
-                            # дернуть апишку
-                            pass
+                            requests.post(
+                                'backend:8080/api/create_card',
+                                {
+                                    "target_url": url,
+                                    "category": cat_name,
+                                    "shutdown_time": "01-01-2100",
+                                }
+                            )
                 except:
                     pass
         return result
@@ -141,7 +153,10 @@ def parse_cat_page(url, cat_name, all_items):
         print(e)
         return None
 
+
 WB_BASE_LINK = 'https://www.wildberries.ru'
+
+
 def main_scraper():
     create_table()
     cats = read_json('subcategories.json')
@@ -155,5 +170,6 @@ def main_scraper():
                 break
             write_items(items)
             cnt += 1
+
 
 main_scraper()
