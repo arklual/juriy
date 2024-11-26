@@ -1,0 +1,165 @@
+.register_wrapper {
+    z-index: 1001;
+
+    height: 100vh;
+    width: 100vw;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    background-color: rgb(255, 255, 255);
+
+    display: flex;
+    justify-content: center;
+    
+}
+.hidden {
+    display: none;
+}
+.register_wrapper * {
+    z-index: 1001 !important;
+}
+    .register_box {
+        box-shadow: 0 0 20px rgba(0,0,0,.1);
+        margin: auto;
+        height: auto;
+
+        width: 43%;
+        min-width: 300px;
+        --max_width: 340px;
+        --bounds: 20px;
+        max-width: calc(var(--max_width) + var(--bounds)*2);
+
+        border-radius: 5px;
+        background-color: white;
+    }
+        .reg_head {
+            background: linear-gradient(0deg,rgba(36,36,36,.05) 0,rgba(36,36,36,.05) 100%),linear-gradient(97deg,#ed3cca .49%,#df34d2 14.88%,#d02bd9 29.27%,#bf22e1 43.14%,#ae1ae8 57.02%,#9a10f0 70.89%,#8306f7 84.76%,#7c1af8 99.15%) !important;
+            height: 20%;
+            width: 100%;
+
+            border-radius: 5px 5px 0 0;
+            padding: 0 10px 0 10px;
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+            .reg_head img {
+                height: 70%;
+                
+            }
+        .content_container {
+            padding: 0 var(--bounds) 0 var(--bounds);
+            margin: 15px 0px 15px 0px;
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+            .content_container input {
+                width: 100%;
+                height: 40px;
+                padding: 5px 10px 5px 10px;
+    
+                color: #000;
+                font-family: inherit;
+                font-size: inherit;
+                font-weight: inherit;
+
+                background-color: #f1f1f5;
+
+                appearance: none;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+    
+                border: solid 1px #f1f1f5;
+                border-radius: 7px;
+    
+                font-size: 18px;
+
+                transition: all .3s ease 0s;
+            }
+                .content_container input:hover {
+                    background-color: #e8e8f0;
+                    border-color: #e8e8f0;
+                }
+                .content_container input:placeholder-shown {
+                    color: #585858;
+                }
+                .content_container input:focus {
+                    color: #000;
+                    background-color: transparent;
+                }
+                .content_container input:not(:placeholder-shown), .content_container input:focus {
+                    border-color: #a73afd;
+                    box-shadow: inset 1px 0 0 #a73afd,inset 0 1px 0 #a73afd,inset -1px 0 0 #a73afd,inset 0 -1px 0 #a73afd;
+                }
+                .reg_code {
+                    display: flex;
+                    flex-direction: row;
+
+                    width: 100%;
+
+                    /*justify-content: space-between;*/
+                }
+                    .reg_code button {
+                        margin: 0 0 0 5px;
+
+                        font-size: 16px;
+                        font-weight: 700;
+                        
+                        width: 50%;
+                    }
+                    .reg_code input {
+                        width: 50%;
+                    }
+            .decor_btn {
+                background: rgba(167,58,253,.9);
+                opacity: 0.9;
+
+                border-radius: 5px;
+                border: none;
+
+                color: white;
+
+                padding: 5px;
+            }
+                .decor_btn:hover {
+                    opacity: 1;
+                }
+            .submit_btn {
+                height: 40px;
+                font-weight: 700;
+
+                font-size: 16px;
+                width: 100%;
+            }
+        .other_way {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+
+            justify-content: space-evenly;
+            align-items: center;
+
+            width: 100%;
+        }
+            .other_way hr {
+                display: none;
+
+                color: #c3c3c3a6;
+                width: 20%;
+                height: 2px;
+                
+                margin: 0;
+            }
+            .other_way p a {
+                margin-left: 10px;
+                color: #001aff;
+                text-decoration: 2px solid #001aff;
+            }

@@ -1,0 +1,738 @@
+openapi: 3.0.0
+info: 
+  title: "WB Parser"
+  version: 0.0.1
+  description: "НЕ СООТВЕТСТВУЕТ ТЗ!\n 1) Подписка на категории бесплатна\n 2) нет трэкера а-ля https://sellego.com . Почему? Это служебная инфа, не нужная пользователям, попробуйте чекнуть сами и всё поймёте. Да и реализация этого мханизма самостоятельно слишком сложна, а воровать его - так он работает слишком медленно (на бесплатке) и юзает капчу\n"
+servers:
+  - url: http://localhost:8000/api/v1/
+    description: API server version 1
+paths:
+  /get_cards:
+    get:
+      summary: Метод получения карточек товаров
+      tags:
+        - Cards
+      parameters:
+        - name: "start"
+          description: "Номер первой карточки (т.е её позиция в отсортированном и отфильтрованном по каким-либо критериям списке)"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "count"
+          description: "Сколько товаров должно быть выведено"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "sort"
+          in: query
+          required: true
+          schema:
+            enum:
+              - recent
+              - oldest
+              - price_upscending
+              - price_descending
+        - name: "time_start"
+          description: "Фильтр по времени создания"
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "DD-MM-YY"
+        - name: "time_finish"
+          description: "Фильтр по времени создания"
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "DD-MM-YY"
+        - name: "price_floor"
+          description: "Фильтр по цене"
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: "price_top"
+          description: "Фильтр по цене"
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: "category"
+          description: "Фильтр по категории (см. /get_categories)"
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cards_array"
+        404:
+          description: Error 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_404"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /get_favorite:
+    get:
+      summary: Метод получения избранных карточек товаров
+      tags:
+        - Cards
+        - Favorite
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: "start"
+          description: "Номер первой карточки (т.е её позиция в отсортированном и отфильтрованном по каким-либо критериям списке)"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "count"
+          description: "Сколько товаров должно быть выведено"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "sort"
+          in: query
+          required: true
+          schema:
+            enum:
+              - recent
+              - oldest
+              - price_upscending
+              - price_descending
+      responses:
+        200:
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cards_array"
+        404:
+          description: Error 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_404"
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /register:
+    post:
+      summary: Метод для регистрации (email, password)
+      tags:
+        - Register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: 
+                - login
+                - password
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: "JWT, that must contain smth like {confirm_required: true}"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        default:
+          description: Error
+  /confirm_email:
+    post:
+      summary: Форма подтверждения Email
+      tags:
+        - Register
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: number
+      responses:
+        200:
+          description: "Updated JWT (must contain smth like {confirm_required: false})"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        default:
+          description: Error
+  /sign-in:
+    post:
+      summary: Форма входа (email, password)
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: 
+                - login
+                - password
+              properties:
+                login:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Response with data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        default:
+          description: Error
+  /create_card:
+    post:
+      summary: Добавление карточки тровара
+      tags:
+        - Admin
+        - Cards
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Card_create"
+      responses:
+        200:
+          description: "Response with no data"
+        403:
+          description: Error 403
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_403"
+        default:
+          description: Error
+  /add_favorite:
+    post:
+      summary: Добавление карточки тровара в избранное
+      tags:
+        - Cards
+        - Favorite
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - card_id
+              properties:
+                card_id:
+                  type: string
+      responses:
+        200:
+          description: "Response with no data"
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+  /del_favorite:
+    delete:
+      summary: Удаление карточки тровара из избранного
+      tags:
+        - Cards
+        - Favorite
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: "Card_id"
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Response with no data"
+        401:
+          description: Error 403
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+  /search:
+    get:
+      summary: Метод поиска карточек товаров
+      tags:
+        - Cards
+      parameters:
+        - name: "req"
+          description: "Запрос для поиска"
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: "start"
+          description: "Номер первой карточки (т.е её позиция в отсортированном и отфильтрованном по каким-либо критериям списке)"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "count"
+          description: "Сколько товаров должно быть выведено"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "sort"
+          in: query
+          required: true
+          schema:
+            enum:
+              - recent
+              - oldest
+              - price_upscending
+              - price_descending
+        - name: "time_start"
+          description: "Фильтр по времени создания"
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "DD-MM-YY"
+        - name: "time_finish"
+          description: "Фильтр по времени создания"
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "DD-MM-YY"
+        - name: "price_floor"
+          description: "Фильтр по цене"
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: "price_top"
+          description: "Фильтр по цене"
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: "category"
+          description: "Фильтр по категории (см. /get_categories)"
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cards_array"
+        404:
+          description: Error 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_404"
+        default:
+          description: Error          
+  /get_categories:
+    get:
+      summary: Метод получения категорий
+      tags:
+        - Categories
+      responses:
+        "200":
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        404:
+          description: Error 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_404"
+        default:
+          description: Error  
+  /add_category:
+    post:
+      summary: Метод создания категории
+      tags:
+        - Admin
+        - Categories
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_name
+              properties:
+                category_name:
+                  type: string
+      responses:
+        200:
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        403:
+          description: Error 403
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_403"
+        default:
+          description: Error
+  /del_category:
+    delete:
+      summary: Метод создания категории
+      tags:
+        - Admin
+        - Categories
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: "category_name"
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Responce with data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        403:
+          description: Error 403
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_403"
+        default:
+          description: Error
+  /update_card:
+    put:
+      summary: Добавление карточки тровара
+      tags:
+        - Admin
+        - Cards
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Card"
+      responses:
+        200:
+          description: "Response with no data"
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        403:
+          description: Error 403
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_403"
+        default:
+          description: Error
+  /follow_category:
+    post:
+      summary: Метод подписки на категорию
+      tags:
+        - Categories
+        - Follow
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_name
+              properties:
+                category_name:
+                  type: string
+      responses:
+        200:
+          description: Response with no data
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+  /unfollow_category:
+    post:
+      summary: Метод отмены подписки на категорию
+      tags:
+        - Categories
+        - Follow
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_name
+              properties:
+                category_name:
+                  type: string
+      responses:
+        200:
+          description: Response with no data
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+  /get_followed_categories:
+    get:
+      summary: Метод получения категорий на которые подписан пользователь
+      tags:
+        - Categories
+        - Follow
+      parameters:
+        - name: "Authorization"
+          description: "JWT"
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Response with data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        401:
+          description: Error 401
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error_401"
+        default:
+          description: Error
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: "Description of error"
+          example: description of error
+    Error_404:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: "Description of error"
+          example: "Товар не найден! Попробуйте изменить параметры запроса или повторите запрос позже"
+    Error_401:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: "Description of error"
+          example: "Для данного действия нужна авторизация!"
+    Error_403:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: "Description of error"
+          example: "Нет прав для совершеня действия!"
+  
+    Card_create:
+      type: object
+      required:
+        - target_url
+        - category
+        - shutdown_time
+      properties:
+        target_url:
+          type: string
+          description: "Ссылка на ВБ"
+        category:
+          type: string
+          description: "Категория товаров, полученная из /get_categories"
+        shutdown_time:
+          type: string
+          description: "До какого момента объявление должно быть на сайте"
+        
+    Card:
+      type: object
+      required:
+        - card_id
+        - name
+        - image_url
+        - price
+        - target_url
+      properties:
+        card_id:
+          type: integer
+        name:
+          type: string
+        target_url:
+          type: string
+        image_url:
+          type: string
+        price:
+          type: integer
+    Cards_array:
+      type: array
+      items:
+         $ref: "#/components/schemas/Card"
+    User:
+      type: object
+      required: 
+        - JWT
+        - need_email_confirm
+        - is_admin
+      properties:
+        JWT:
+          type: string
+        email_confirmed:
+          type: boolean
+        is_admin:
+          type: boolean

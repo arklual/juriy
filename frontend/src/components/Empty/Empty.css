@@ -1,0 +1,31 @@
+.unauthed_wrapper {
+    margin: auto;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    margin: auto;
+
+    max-width: 1500px;
+    width: 100%;
+    min-width: 100%;
+}
+    .unauthed_wrapper h1 {
+        font-size: 10vh;
+        font-family: "Montserrat Alternates", sans-serif;
+        font-weight: 700;
+        font-style: normal;
+        
+        color: #ae1ae8; /* non-webkit cant handle text-fill-color? */
+        background: linear-gradient(0deg,rgba(36,36,36,.05) 0,rgba(36,36,36,.05) 100%),linear-gradient(97deg,#ed3cca .49%,#df34d2 14.88%,#d02bd9 29.27%,#bf22e1 43.14%,#ae1ae8 57.02%,#9a10f0 70.89%,#8306f7 84.76%,#7c1af8 99.15%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        -moz-text-fill-color: transparent;
+    }
+    .unauthed_wrapper p {
+        font-weight: 700;
+        font-size: 2vh;
+    }

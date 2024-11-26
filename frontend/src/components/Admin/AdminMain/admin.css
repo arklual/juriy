@@ -1,0 +1,10 @@
+.admin_wrapper{
+    padding: 30px;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    margin: auto;
+    justify-content: center;
+}
