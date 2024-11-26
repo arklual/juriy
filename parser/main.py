@@ -161,15 +161,15 @@ def main_scraper():
     create_table()
     cats = read_json('subcategories.json')
     all_items = read_items()
-    for cat in cats:
-        cnt = 0
-        while True:
-            category_name = cat.replace("/catalog/dom/")
-            items = parse_cat_page(WB_BASE_LINK + cat + '?sort=popular&page={cnt}', category_name, all_items)
-            if len(items) == 0:
-                break
-            write_items(items)
-            cnt += 1
+    #for cat in cats:
+    cnt = 0
+    while True:
+        category_name = cats[-1].replace("/catalog/dom/")
+        items = parse_cat_page(WB_BASE_LINK + cats[-1] + '?sort=popular&page={cnt}', category_name, all_items)
+        if len(items) == 0:
+            break
+        write_items(items)
+        cnt += 1
 
 
 main_scraper()
