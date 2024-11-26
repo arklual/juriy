@@ -1,14 +1,42 @@
+
+
+
+
+
+
+
+import psycopg2
+from psycopg2 import sql
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup as BS
 from selenium.webdriver.common.by import By
 import time
-import json
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+import json
 
+
+def create_table():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS items (
+            id SERIAL PRIMARY KEY,
+            category VARCHAR(255),
+            name VARCHAR(255),
+            url TEXT UNIQUE,
+            last_price INTEGER,
+            price INTEGER,
+            img_src TEXT,
+            status VARCHAR(50) DEFAULT 'not added'
+        )
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def read_json(file_path):
@@ -21,6 +49,41 @@ def read_json(file_path):
         print(f"Error reading JSON file: {e}")
         return {}
 
+# Database connection
+def get_db_connection():
+    conn = psycopg2.connect(
+        dbname='your_dbname',
+        user='your_username',
+        password='your_password',
+        host='your_host',
+        port='your_port'
+    )
+    return conn
+
+def read_items():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM items")
+    items = cur.fetchall()
+    cur.close()
+    conn.close()
+    return items
+
+def write_items(items):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    for item in items:
+        cur.execute("""
+            INSERT INTO items (category, name, url, last_price, price, img_src)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (url) DO UPDATE SET
+                last_price = EXCLUDED.last_price,
+                price = EXCLUDED.price,
+                img_src = EXCLUDED.img_src
+        """, (item['category'], item['name'], item['url'], item['last_price'], item['price'], item['img_src']))
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def parse_cat_page(url, cat_name, all_items):
     try:
@@ -58,7 +121,7 @@ def parse_cat_page(url, cat_name, all_items):
                     item_index = 0
                     idx_counter = 0
                     for i in all_items:
-                        if i['url'] == url:
+                        if i[3] == url:  # Assuming url is the 4th column in the items table
                             in_items = True
                         else:
                             idx_counter += 1
@@ -72,9 +135,9 @@ def parse_cat_page(url, cat_name, all_items):
                             'img_src': image
                         })
                     else:
-                        all_items[idx_counter]['last_price'] = all_items[idx_counter]['price']
-                        all_items[idx_counter]['price'] = int(real_price)
-                        if all_items[idx_counter]['last_price'] > all_items[idx_counter]['price']:
+                        all_items[idx_counter][4] = all_items[idx_counter][5]  # last_price = price
+                        all_items[idx_counter][5] = int(real_price)  # price = new price
+                        if all_items[idx_counter][4] > all_items[idx_counter][5]:
                             # дернуть апишку
                             pass
                 except:
@@ -84,20 +147,12 @@ def parse_cat_page(url, cat_name, all_items):
     except Exception as e:
         print(e)
         return None
-    
-def write_json(data, file_path):
-    try:
-        with open(file_path, 'w') as f:
-            json.dump(data, f, indent=4)
-    except Exception as e:
-        print(f"Error writing JSON file: {e}")
-
-
 
 WB_BASE_LINK = 'https://www.wildberries.ru'
 def main_scraper():
+    create_table()
     cats = read_json('subcategories.json')
-    all_items = read_json('items.json')
+    all_items = read_items()
     for cat in cats:
         cnt = 0
         while True:
@@ -105,77 +160,7 @@ def main_scraper():
             items = parse_cat_page(WB_BASE_LINK + cat + '?sort=popular&page={cnt}', category_name, all_items)
             if len(items) == 0:
                 break
-            write_json(items, 'items.json')
-            cnt+=1
+            write_items(items)
+            cnt += 1
 
 main_scraper()
-
-#TODO: add a function to scroll all pages for category (#READY)
-#TODO: when scraping add items to json (name, price, url, category, subcategory) (#READY)
-#TODO: if item already in json, check if price became less and update json, make post request to add card on our website (#READY)
-#TODO: add multi threads
-"""
-парсинг должен выполняться раз в сутки
-парсинг - пиздец как долгий процесс, поэтому надо делать его в отдельном потоке
-парсинг выполняется один, с ним вместе не выполняется никаких других задач
-при парсинге будет чисто сбор данны в json (по всем категориям)
-если продукт добавляется впервые то его last_price равен текущей и обычный price равен текущей
-если продукт уже есть в json, то его last_price равен прошлой price, а price равен текущей
-
-после этого товары из json также раз в сутки будет по ним обход, проверка price < last_price
-если да, то отправка запроса на добавление карточки на сайт, статус в json меняется на "added"
-если нет, то статус остается "not added"
-"""
-
-
-
-"""
-import concurrent.futures
-import threading
-from threading import Lock
-
-class ProductStorage:
-    def __init__(self):
-        self.lock = Lock()
-        self.products = read_json('items.json').get('products', [])
-    
-    def add_products(self, new_products):
-        with self.lock:
-            for product in new_products:
-                existing_product = next((p for p in self.products if p['id'] == product['id']), None)
-                if existing_product:
-                    existing_product['last_price'] = existing_product['price']
-                    existing_product['price'] = product['price']
-                else:
-                    product['last_price'] = product['price']
-                    self.products.append(product)
-            self.save_products()
-    
-    def save_products(self):
-        write_json({'products': self.products}, 'items.json')
-
-def process_category(cat, storage):
-    cnt = 0
-    while True:
-        category_name = cat.replace("/catalog/dom/", "")
-        items = parse_cat_page(WB_BASE_LINK + cat + f'?sort=popular&page={cnt}', category_name, storage.products)
-        if not items:
-            break
-        storage.add_products(items)
-        cnt += 1
-
-def main_scraper():
-    cats = read_json('subcategories.json')
-    storage = ProductStorage()
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(process_category, cat, storage) for cat in cats]
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                print(f"Error processing category: {e}")
-
-if __name__ == "__main__":
-    main_scraper()
-"""
