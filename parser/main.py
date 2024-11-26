@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 import psycopg2
 from psycopg2 import sql
 from selenium import webdriver
@@ -52,11 +45,11 @@ def read_json(file_path):
 # Database connection
 def get_db_connection():
     conn = psycopg2.connect(
-        dbname='your_dbname',
-        user='your_username',
-        password='your_password',
-        host='your_host',
-        port='your_port'
+        dbname='postgres',
+        user='postgres',
+        password='postgres',
+        host='pgdb',
+        port='5432'
     )
     return conn
 
