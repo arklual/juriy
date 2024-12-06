@@ -3,6 +3,10 @@ from typing import Optional
 
 
 class CreateCard(Schema):
+    name: str = Field(..., min_length=1, required=True)
+    price: str = Field(..., min_length=1, required=True)
+    img: str = Field(..., min_length=1, required=True)
+    
     target_url: str = Field(..., min_length=1, required=True)
     category: str = Field(..., min_length=1, required=True)
     shutdown_time: str = Field(..., min_length=1, required=True)

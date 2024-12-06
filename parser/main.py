@@ -1,4 +1,5 @@
 import psycopg2
+from pydantic import BaseModel
 import requests
 from psycopg2 import sql
 from selenium import webdriver
@@ -49,8 +50,8 @@ def get_db_connection():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='postgres',
-        host='pgdb',
+        password='12345678',
+        host='localhost',
         port='5432'
     )
     return conn
@@ -82,6 +83,11 @@ def write_items(items):
     cur.close()
     conn.close()
 
+class CreateCard(BaseModel):
+    target_url: str
+    category: str
+    shutdown_time: str
+
 
 def parse_cat_page(url, cat_name, all_items):
     try:
@@ -110,40 +116,47 @@ def parse_cat_page(url, cat_name, all_items):
                     name = card.find('a', {'class': 'product-card__link'}).get("aria-label")
                     url = card.find('a', {'class': 'product-card__link'}).get("href")
                     price = card.find('ins', {'class': 'price__lower-price'}).text
-                    image = card.find("img", {'class': 'j-thumbnail'}).src
+                    image = card.find("img", {'class': 'j-thumbnail'})['src']
                     real_price = ''
                     for i in price:
                         if i.isdigit():
                             real_price += i
-                    in_items = False
-                    item_index = 0
                     idx_counter = 0
                     for i in all_items:
                         if i[3] == url:  # Assuming url is the 4th column in the items table
-                            in_items = True
+                            print(url, 'Вход карточки в воронку')
+                            #i[4] = i[5]  # last_price = price
+                            #i[5] = int(real_price)  # price = new price
+                            
+                            if i[5] >= int(real_price):
+                                print(cat_name, url)
+                                response = requests.post(
+                                    'http://127.0.0.1:8000/api/create_card',
+                                    json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_name, 'shutdown_time': '01-01-2100'},
+                                    headers={"Content-Type": "application/json"}
+                                )
+                                print(response.status_code)
+                                print(response.json())
+                                result.append({
+                                    'category': cat_name,
+                                    'name': name,
+                                    'url': url,
+                                    'last_price': i[5],
+                                    'price': int(real_price),
+                                    'img_src': image
+                                })
                         else:
+                            print('Card appended')
+                            result.append({
+                                'category': cat_name,
+                                'name': name,
+                                'url': url,
+                                'last_price': 0,
+                                'price': int(real_price),
+                                'img_src': image
+                            })
                             idx_counter += 1
-                    if not in_items:
-                        result.append({
-                            'category': cat_name,
-                            'name': name,
-                            'url': url,
-                            'last_price': 0,
-                            'price': int(real_price),
-                            'img_src': image
-                        })
-                    else:
-                        all_items[idx_counter][4] = all_items[idx_counter][5]  # last_price = price
-                        all_items[idx_counter][5] = int(real_price)  # price = new price
-                        if all_items[idx_counter][4] > all_items[idx_counter][5]:
-                            requests.post(
-                                'backend:8080/api/create_card',
-                                {
-                                    "target_url": url,
-                                    "category": cat_name,
-                                    "shutdown_time": "01-01-2100",
-                                }
-                            )
+
                 except:
                     pass
         return result
@@ -160,11 +173,13 @@ def main_scraper():
     create_table()
     cats = read_json('subcategories.json')
     all_items = read_items()
+    #print(all_items)
     #for cat in cats:
-    cnt = 0
-    while True:
-        category_name = cats[-1].replace("/catalog/dom/")
-        items = parse_cat_page(WB_BASE_LINK + cats[-1] + '?sort=popular&page={cnt}', category_name, all_items)
+    cnt = 1
+    while cnt < 2:
+        category_name = cats['subcats'][-1].replace("/catalog/dom/", '')
+        items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items)
+        #print(len(items))
         if len(items) == 0:
             break
         write_items(items)
