@@ -186,4 +186,4 @@ def main_scraper():
         cnt += 1
 
 
-main_scraper()
+#main_scraper()
