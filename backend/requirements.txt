@@ -8,3 +8,4 @@ xvfbwrapper
 webdriver_manager
 fuzzywuzzy
 psycopg2
+pydantic
