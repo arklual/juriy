@@ -1,8 +1,8 @@
-FROM node:17-alpine
-RUN apk add --no-cache npm bash
+FROM node:18-alpine
 WORKDIR /app
-COPY package.json .                      
+COPY package*.json ./
 RUN npm install
+RUN npm ci
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--host"]
