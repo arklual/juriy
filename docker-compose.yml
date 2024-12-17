@@ -1,13 +1,5 @@
 version: '3'
 services:
-  backend:
-    build: ./backend
-    container_name: backend
-    ports:
-      - 8080:8080
-    depends_on:
-      - pgdb
-
   pgdb:
     image: postgres
     environment:
@@ -17,13 +9,18 @@ services:
     container_name: pgdb
     volumes:
       - pgdbdata:/var/lib/postgresql/data/
-
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - 8080:8080
+    depends_on:
+      - pgdb
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
       - '3000:3000'
-
   parser:
     build: ./parser
     container_name: parser

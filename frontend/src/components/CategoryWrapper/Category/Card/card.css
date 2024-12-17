@@ -1,0 +1,158 @@
+.card_frame{
+    grid-column-start: span 1;
+    grid-column-end: auto;
+
+    border-radius: 15px;
+
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+
+    /*padding: 0 5px 0 5px;*/
+    margin: auto;
+
+    position: relative;
+}
+    .id {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+
+        width: auto;
+        height: 25px;
+
+        background-color: white;
+        margin: 5px 0 0 5px;
+        padding: 5px;
+
+        border-radius: 5px;
+        border: solid 2px #a2d5ff; 
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+        .id p{
+            font-size: 20px;
+            color:#a2d5ff;
+        }
+    .product_img{
+        
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+
+        margin: auto;
+
+        cursor: zoom-in;
+    } 
+    .fav_ico_area{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        width: calc(23px*1.1 + 10px*2);
+        height: calc(21px*1.1 + 10px*2);
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1;
+
+        cursor: pointer;
+    }
+    .fav_ico {
+        background-image: url("./fav.svg");
+        background-repeat: no-repeat;
+        width: calc(23px*1.1);
+        height: calc(21px*1.1);
+        z-index: 0;
+
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        margin: 10px;
+
+        cursor: pointer;
+    }
+        .fav_ico_area:hover ~ .fav_ico{
+            background-image: url("./fav_2.svg");
+        }
+        .fav_ico_active {
+            background-image: url("./fav_3.svg") !important;
+        }
+    .card_cost {
+        color: #a73afd;
+
+        font-size: 18px;
+        line-height: 24px;
+        font-weight: 700;
+
+        margin: 10px 0 0 5px;
+    }
+    .card_name_wrapper {
+        min-width: 0;
+        max-width: 100%;
+        position: relative;
+    }
+        .card_name {
+            color: #242424;
+
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 400;
+
+            margin: 3px 0 0 5px;
+
+            position: relative;
+            min-width: 0;
+            max-width: min(40vw, 180px);
+            
+            overflow: hidden;
+            text-overflow: ellipsis ellipsis;
+            white-space: nowrap;
+        }
+        
+    .buy_card_btn {
+        margin: 5px 0 0 0;
+
+        font-size: 14px;
+        line-height: 20px;
+        padding: 5px 24px 7px;
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        
+        border: 2px solid transparent;
+        border-radius: 12px;
+
+        cursor: pointer;
+        color: #fff;
+
+        background-color: #a73afd;
+    }
+        .buy_card_btn:hover {
+            background-color: rgba(167,58,253,.9);
+            border-color: transparent;
+        }
+        .buy_card_btn img {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+        }
+        .buy_card_btn p {
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 600;
+            letter-spacing: 0;
+
+            padding-right: 8px;
+
+            text-decoration: underline;
+        }

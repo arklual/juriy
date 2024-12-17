@@ -1,0 +1,83 @@
+.AddCatMenu_container {
+    padding: 10px;
+
+    box-shadow: 0 0 25px rgba(0,0,0,.2);
+
+    width: 41%;
+    min-width: 300px;
+    --max_width: 340px;
+    --bounds: 20px;
+    max-width: calc(var(--max_width) + var(--bounds)*2);
+
+    border-radius: 5px;
+    background-color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+    .AddCatMenu_container input {
+        width: 100%;
+        height: 40px;
+        padding: 5px 10px 5px 10px;
+
+        color: #000;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+
+        background-color: #f1f1f5;
+
+        appearance: none;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+
+        border: solid 1px #f1f1f5;
+        border-radius: 7px;
+
+        font-size: 18px;
+
+        transition: all .3s ease 0s;
+    }
+        .AddCatMenu_container input:hover {
+            background-color: #e8e8f0;
+            border-color: #e8e8f0;
+        }
+        .AddCatMenu_container input:placeholder-shown {
+            color: #585858;
+        }
+        .AddCatMenu_container input:focus {
+            color: #000;
+            background-color: transparent;
+        }
+        .AddCatMenu_container input:not(:placeholder-shown), .AddCatMenu_container input:focus {
+            border-color: #a73afd;
+            box-shadow: inset 1px 0 0 #a73afd,inset 0 1px 0 #a73afd,inset -1px 0 0 #a73afd,inset 0 -1px 0 #a73afd;
+        }
+
+    .AddCatMenu_container h3 {
+        margin: auto;
+    }
+    .AddCatMenu_container button {
+        background: rgba(167,58,253,.9);
+        opacity: 0.9;
+
+        width: 100%;
+        height: 40px;
+        padding: 5px;
+        
+        font-weight: 700;
+        font-size: 16px;
+
+        border-radius: 5px;
+        border: none;
+    }
+        .AddCatMenu_container button:hover {
+            opacity: 1;
+        }
+    .AddCatMenu_container button p {
+        color: white;
+    }

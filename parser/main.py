@@ -12,6 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import json
+import logging
 
 
 def create_table():
@@ -50,8 +51,8 @@ def get_db_connection():
     conn = psycopg2.connect(
         dbname='postgres',
         user='postgres',
-        password='12345678',
-        host='localhost',
+        password='postgres',
+        host='pgdb',
         port='5432'
     )
     return conn
@@ -109,6 +110,7 @@ def parse_cat_page(url, cat_name, all_items):
 
         soup = BS(response, 'html.parser')
         cards = soup.find_all("div", {"class": "product-card__wrapper"})
+        logging.warning(len(cards))
         result = []
         if cards:
             for card in cards:
@@ -122,21 +124,25 @@ def parse_cat_page(url, cat_name, all_items):
                         if i.isdigit():
                             real_price += i
                     idx_counter = 0
+
                     for i in all_items:
+                        time.sleep(1)
                         if i[3] == url:  # Assuming url is the 4th column in the items table
                             print(url, 'Вход карточки в воронку')
+                            logging.warning("вход в воронку")
                             #i[4] = i[5]  # last_price = price
                             #i[5] = int(real_price)  # price = new price
                             
                             if i[5] >= int(real_price):
                                 print(cat_name, url)
                                 response = requests.post(
-                                    'http://127.0.0.1:8000/api/create_card',
+                                    'http://backend:8080/api/create_card',
                                     json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_name, 'shutdown_time': '01-01-2100'},
                                     headers={"Content-Type": "application/json"}
                                 )
                                 print(response.status_code)
                                 print(response.json())
+                                logging.warning(response.status_code)
                                 result.append({
                                     'category': cat_name,
                                     'name': name,
@@ -156,13 +162,37 @@ def parse_cat_page(url, cat_name, all_items):
                                 'img_src': image
                             })
                             idx_counter += 1
+                        logging.warning(len(result))
+                        
+                    print('Card appended')
+                    response = requests.post(
+                        'http://backend:8080/api/create_card',
+                        json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_name, 'shutdown_time': '01-01-2100'},
+                        headers={"Content-Type": "application/json"}
+                    )
+                    time.sleep(1)
+                    print(response.status_code)
+                    print(response.json())
+                    result.append({
+                        'category': cat_name,
+                        'name': name,
+                        'url': url,
+                        'last_price': 0,
+                        'price': int(real_price),
+                        'img_src': image
+                    })
+                    logging.warning(len(result))
+                    idx_counter += 1
+                except Exception as e:
+                    logging.critical(e)
 
-                except:
-                    pass
+                    
         return result
 
     except Exception as e:
         print(e)
+        logging.critical(e)
+
         return None
 
 
@@ -177,9 +207,11 @@ def main_scraper():
     #for cat in cats:
     cnt = 1
     while cnt < 2:
-        category_name = cats['subcats'][-1].replace("/catalog/dom/", '')
+        category_name = cats['subcats'][-1].replace("/catalog/dom/", '').replace('root:', '')
+        logging.warning(category_name)
         items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items)
         #print(len(items))
+        logging.warning(len(items))
         if len(items) == 0:
             break
         write_items(items)

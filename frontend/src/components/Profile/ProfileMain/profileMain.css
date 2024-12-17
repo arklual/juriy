@@ -1,0 +1,88 @@
+.profile_block {
+    padding: 10px;
+
+    max-width: 1500px;
+    width: 100%;
+    margin: auto;
+}
+    .profile_block h1 {
+        font-size: 5vh;
+        font-family: "Montserrat Alternates", sans-serif;
+        font-weight: 700;
+        font-style: normal;
+        
+        color: #ae1ae8; /* non-webkit cant handle text-fill-color? */
+        background: linear-gradient(0deg,rgba(36,36,36,.05) 0,rgba(36,36,36,.05) 100%),linear-gradient(97deg,#ed3cca .49%,#df34d2 14.88%,#d02bd9 29.27%,#bf22e1 43.14%,#ae1ae8 57.02%,#9a10f0 70.89%,#8306f7 84.76%,#7c1af8 99.15%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        -moz-text-fill-color: transparent;
+    }
+    @media (max-width: 900px) {
+        .profile_block h1 {
+            font-size: 3.5vh;
+        }
+    }
+        .profile_body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 20px;
+
+            max-width: 1504px;
+        }
+            .profile_item {
+                background-color: white;
+                border-radius: 7px;
+                padding: 10px;
+
+                box-shadow: 0 0 17px rgba(0,0,0,.1);
+                transition: 0.2s ease-out;
+
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                flex-direction: row;
+                gap: 7px;
+
+                max-width: 200px;
+            }
+                .profile_item:hover{
+                    box-shadow: 0 0 20px rgba(0,0,0,.18);
+                }
+                .profile_item p {
+                    font-size: 18px;
+                    font-weight: 500;
+
+                    margin-top: 2px;
+
+                    color: #000;
+                }
+                .profile_item button {
+                    background: rgba(167,58,253,.9);
+                    opacity: 0.7;
+                    border-radius: 5px;
+
+                    height: calc(100% + 2px*2);
+                    border: none;
+                    cursor: pointer;
+
+                    transition: 0.2s ease-out;
+                } 
+                    .profile_item button:hover {
+                        opacity: 0.9;
+                    }
+                    .profile_item button p {
+                        opacity: 1;
+
+                        margin: 2px 7px 2px 7px;
+
+                        color: #fff;
+                        font-size: 16px;
+                        line-height: 22px;
+                        font-weight: 600;
+                        white-space: nowrap;
+
+                        color: #fff;
+                        font-family: sans-serif;
+                    }

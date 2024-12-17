@@ -1,0 +1,297 @@
+header {
+    position: sticky;
+    top: 0;
+    right: 0;
+    left: 0;
+
+    z-index: 1000;
+
+    background: linear-gradient(0deg,rgba(36,36,36,.05) 0,rgba(36,36,36,.05) 100%),linear-gradient(97deg,#ed3cca .49%,#df34d2 14.88%,#d02bd9 29.27%,#bf22e1 43.14%,#ae1ae8 57.02%,#9a10f0 70.89%,#8306f7 84.76%,#7c1af8 99.15%);
+    height: 90px;
+    max-height: 9vh;
+    padding: 0 20px 0 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header *:any-link{
+    text-decoration: none;
+}
+
+.gray_screen {
+    height: 100vh;
+    width: 100vw;
+    z-index: 100;
+    background-color: rgba(0,0,0,0.4);
+
+    position: absolute;
+    top: calc(min(90px, 9vh));
+    left: 0;
+
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    header{
+        height: 55px;
+        max-height: 7vh;
+    }
+}
+    .header_container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+
+        max-width: 1400px;
+        width: 85%;
+    }
+    @media (max-width: 875px) {
+        .header_container{
+            width: 95%;
+        }   
+    }
+    @media (max-width: 768px) {
+        .header_container{
+            width: 100%;
+        }
+    }
+        @media (max-width: 1200px) {
+            .headr_logo {
+                width: 172px;
+                height: auto;
+            }
+        }
+        @media (max-width: 1050px) {
+            .headr_logo, .header_logo_parent {
+                display: none;
+            }
+        }
+        .search_container {
+            width: 100%;
+
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+        }
+            .searchInput_wrapper{
+                position: relative;
+
+                display: flex;
+                align-items: center;
+            }
+                .searchInput_n_help {
+                    width: 100%;
+                }
+                    .searchInput_help_hidden {
+                        display: none;
+                    }
+                    .searchInput_help {
+                        background-color: white;
+
+                        position: absolute;
+                        top: 60px;
+                        z-index: 1001;
+
+                        width: 100%;
+                        height: auto;
+
+                        border-radius: 10px;
+                        box-shadow: 0 0 20px rgba(0,0,0,.2);
+
+                        padding: 10px 5px 10px 5px;
+
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: bottom;
+                        align-items: bottom;
+                    }
+                        .searchInput_help a {
+                            text-decoration: none;
+                            color: #000;
+                        }
+                            .help_item {
+                                padding: 5px;
+                                border-radius: 5px;
+
+                                display: flex;
+                                flex-direction: row;
+                                align-items: center;
+
+                                cursor: pointer;
+                                transition: 0.2s ease-out;
+                            }
+                            .help_item:hover {
+                                background-color: #bebebe28;
+                            }
+                                .help_item p {
+                                    font-size: 16px;
+                                    line-height: 22px;
+                                    font-weight: 600;
+                                }
+                                .help_item img {
+                                    margin: 3px 10px 3px 3px; 
+
+                                }
+                    .searchInput {
+                        width: 100%;
+
+                        padding: 17px 20px 17px 20px;
+
+                        color: #bdbdbd;
+                        font-family: inherit;
+                        font-size: inherit;
+                        font-weight: inherit;
+                        background: #fff;
+                        appearance: none;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: nowrap;
+
+                        border: none;
+                        border-radius: 10px;
+
+                        font-size: 18px;
+                    }
+                        .searchInput:focus, .searchInput:not(:placeholder-shown) {
+                            color: #000;
+                        } 
+                        @media (max-width: 768px) {
+                            .searchInput {
+                                padding: 8px 50px 8px 10px;
+                                max-height: 8vh;
+
+                                border-radius: 7px;
+                                font-size: 15px;
+                            }
+                        }
+                .icons_container {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    position: absolute;
+                    top: auto;
+                    right: 0;
+                }
+                    .searchInputCross {
+                        max-height: calc(1.5vh + 15px*2);
+                        width: auto;
+                    
+                        opacity: 0.78;
+                        
+                        padding: 15px 7px 15px 5px;
+                        transition: 0.2s ease-out;
+                    }
+                        .searchInputCross:hover {
+                            opacity: 1;
+                        }
+                    
+                    .icons_container a{
+                        display: flex;
+                        align-items: center;
+                        justify-content: baseline;
+                        
+                        max-height: calc(3.1vh + 15px*2 + 15px*2);
+                    }
+                        .searchInputSearch{
+                            max-height: calc(3.1vh + 15px*2);
+                            width: auto;
+
+                            padding: 15px 15px 15px 7px !important;
+
+                            opacity: 0.6;
+                            transition: 0.2s ease-out;
+                        }
+                            .searchInputSearch:hover{
+                                opacity: 0.85;
+                            }
+                    .icons_container_item_hidden {
+                        display: none;
+                    }
+
+        .header_item {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+
+            padding-top: 5px;
+
+            font-weight: 300;
+
+            color: rgba(255,255,255,.7);
+            text-decoration: underline;
+            text-decoration-line: rgba(255,255,255,.7);
+        }
+        .header_item:hover {
+            color: #fff;
+            text-decoration-color: #fff;
+
+            transition: 0.3s ease-in-out;
+        }
+        @media (max-width: 875px) {
+            .header_item, .header_item_parent {
+                flex: 1 1 auto;
+                display: none;
+            }
+        }
+            .header_item img {
+                margin: 5px 0 5px 0;
+            }
+            .header_item p {
+                font-size: 14px;
+                margin: 5px 0 5px 0;
+            }
+        
+        .header-btn {
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.4);
+            background-color: rgba(0,0,0,0);
+
+            width: 58px;
+            height: 58px;
+            min-width: 58px;
+            padding: 10px 0 10px 0;
+
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: space-evenly;
+
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .header-btn {
+                min-width: 0;
+
+                width: 4vh;
+                height: 4vh;
+
+                padding: 0;
+
+                border-radius: 8px;
+                border: none;
+                justify-content: space-evenly;
+            }
+        }
+        .header-btn:hover {
+            border-color: #fff;
+            transition: 0.5s ease-in-out;
+        }
+            .header-btn span {
+                width: 26px;
+                height: 3px;
+
+                background-color: #fff;
+
+                border-radius: 3px;
+            }
+            @media (max-width: 768px) {
+                .header-btn span{
+                    max-width: calc(4.5vh - 8px);
+                    height: 2px;
+                    border-radius: 2px;
+                }
+            }
