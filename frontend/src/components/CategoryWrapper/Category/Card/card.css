@@ -12,6 +12,8 @@
     margin: auto;
 
     position: relative;
+
+    transition: 0.2 ease-out;
 }
     .id {
         position: absolute;
@@ -84,15 +86,29 @@
         .fav_ico_active {
             background-image: url("./fav_3.svg") !important;
         }
-    .card_cost {
-        color: #a73afd;
-
-        font-size: 18px;
-        line-height: 24px;
-        font-weight: 700;
-
-        margin: 10px 0 0 5px;
+    .card_cost_container{
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 10px;
     }
+        .card_cost {
+            color: #a73afd;
+
+            font-size: 18px;
+            line-height: 24px;
+            font-weight: 700;
+
+            margin: 10px 0 0 5px;
+        }
+        .card_cost_sell {
+            color: #868695;
+
+            font-size: 14px;
+            line-height: 20px;
+
+            text-decoration: line-through;
+        }
     .card_name_wrapper {
         min-width: 0;
         max-width: 100%;

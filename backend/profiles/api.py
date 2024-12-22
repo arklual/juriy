@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.http import Http404
+from django.views.decorators.csrf import csrf_exempt
 from ninja import Router, Schema, Field
 from django.contrib import auth
 from django.db import IntegrityError
@@ -32,7 +33,7 @@ def send_code(request, user: UserSignin):
             send_mail(
                 "Code",
                 str(account.verf_code),
-                'admin@idealpick.ru',
+                'admin@ideal-pick.ru',
                 [account.email],
                 fail_silently=False,
             )
@@ -43,10 +44,8 @@ def send_code(request, user: UserSignin):
             return 403, {"details": "already verif"}
     else:
         return 404, {"details": "user not found"}
-    
 
-
-@router.post('/confirm_email', response={200: StatusOK, 404: Error, 400: Error,403: Error     })
+@router.post('/confirm_email', response={200: StatusOK, 404: Error, 400: Error,403: Error})
 def confirm_email(request, user: UserConfirm):
     account = auth.authenticate(username=user.login, password=user.password)
     if account is not None:
@@ -61,9 +60,7 @@ def confirm_email(request, user: UserConfirm):
     else:
         return 404, {"details": "user not found"}
 
-
-
-@router.post('/sign-in', response={200: Token, 404: Error, 400: Error ,403: Error    })
+@router.post('/sign-in', response={200: Token, 404: Error, 400: Error ,403: Error})
 def signin(request, user: UserSignin):
     account = auth.authenticate(username=user.login, password=user.password)
     if account is not None:

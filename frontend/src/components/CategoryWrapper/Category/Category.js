@@ -9,12 +9,17 @@ import { useContext, useState } from 'react';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import usePromise from 'react-use-promise';
+import { useIntersectionObserver } from "@siberiacancode/reactuse";
 
 import { FilterContext } from "../../../context/FilterContext";
 import { ErrorContext } from '../../../context/ErrorContext';
 import { FilterConfContext } from '../../../context/FilterConfContext';
 
+
 const Category = (props) => {
+    const PORTION_OF_ITEMS = 20;
+    const [pos, setPos] = useState(0);
+
     const [searchParams, setSearchParams] = useSearchParams();
     let search_param = searchParams.get("src");
     let category_param = searchParams.get("cat");
@@ -49,7 +54,6 @@ const Category = (props) => {
         })
       }
       else { // favorite
-        console.log("f")
         setFilterConf({
           canChangeCat: false,
           extFiltration: false
@@ -94,22 +98,39 @@ const Category = (props) => {
           }
         }
       }
-      console.log(config);
       return Requests_API(
         config
       ).then((res)=>{
         if (res.code === 200) {
           return res
         }
-        else {ErrorDataSetter(res.code, "Ошибка при загрузке карточек!")}
+        else {ErrorDataSetter({code: res.code, res: res, upd_time: Date.now(), descr: "Ошибка при загрузке карточек!"})}
       })
     }
 
     const [card_arr, card_err, card_arr_state] = usePromise(
-      () => cards_array(), [FilterGetter]
+      () => cards_array(pos, PORTION_OF_ITEMS), [FilterGetter]
     )
-    console.log(card_arr)
-    const [addMenu, addMenuVisibilitySetter] = useState(false);
+    const [card_arr_cache, set_card_arr_cache] = useState([]);
+    useEffect(()=>{
+      if (card_arr_state === "resolved") {
+        set_card_arr_cache(card_arr.data);
+        setPos(pos+PORTION_OF_ITEMS);
+      }
+    }, [card_arr_state])
+    
+    const { ref } = useIntersectionObserver({
+      threshold: 1,
+      onChange: (entry) => {
+        if (entry.isIntersecting) {
+          setPos(pos+PORTION_OF_ITEMS)
+          cards_array(pos, PORTION_OF_ITEMS).then((res) =>{
+            set_card_arr_cache([...card_arr_cache, ...res.data])
+          })
+        };
+      },
+    });
+
 
     return (
       <div className='category_wrapper'>
@@ -121,25 +142,19 @@ const Category = (props) => {
           canFilter={props.canFilter}
         />
         {
-          (card_arr_state==="resolved" && card_arr.data.length === 0) ? <Empty/>: null
+          (card_arr_state==="resolved" && card_arr_cache.length === 0) ? <Empty/>: null
         }
         <div className='cards_wrapper'>
           {
-              card_arr_state==="resolved" ? 
-                card_arr.data.map((elem, idx) => {
+              card_arr_state==="resolved" ?
+                card_arr_cache.map((elem, idx) => {
                   return <Card id={elem.id} name={elem.name} cost={elem.price} image={elem.image} link={elem.url} isFavoriteState={props.isFavoriteState}/>
                 })
               : null
           }
-          {/*<div className='more_cards_wrapper'>
-            <div className='more_label'>
-              <p>Ещё...</p>
-            </div>
-            <div className='more_cards_gray'></div>
-            <div className='more_cards'>
-              <Card/>
-            </div>
-          </div>*/}
+          {
+            (card_arr_state==="resolved" && card_arr_cache.length !== 0) ? <div ref={ref}></div>: null
+          }
         </div>
       </div>
     )

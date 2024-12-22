@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS=True
 
-
+CSRF_USE_SESSIONS = True
 # Application definition
 
 INSTALLED_APPS = [
@@ -89,12 +89,8 @@ WSGI_APPLICATION = 'web2_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',   # Используется PostgreSQL
-        'NAME': 'postgres', # Имя базы данных
-        'USER': 'postgres', # Имя пользователя
-        'PASSWORD': 'postgres', # Пароль пользователя
-        'HOST': 'pgdb', # Наименование контейнера для базы данных в Docker Compose
-        'PORT': '5432',  # Порт базы данных
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -142,12 +138,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.beget.com'
-EMAIL_PORT = 25
-EMAIL_USE_TLS = True
-
-EMAIL_HOST_USER = 'admin@idealpick.ru'
-EMAIL_HOST_PASSWORD = 'qF8-5Aq-w2c-T3Y'
+EMAIL_HOST = 'mail.hosting.reg.ru'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = 'admin@ideal-pick.ru'
+EMAIL_HOST_PASSWORD = 'kU6cR4hV1jbB5pM9'
 
 EMAIL_SERVER = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

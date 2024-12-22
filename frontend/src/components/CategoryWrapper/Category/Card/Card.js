@@ -67,7 +67,11 @@ const Card = (props) => {
             <a href={props.image}>
                 <img src={props.image} alt = "product_img" className='product_img'/>
             </a>
-            <p className='card_cost'>{props.cost} ₽</p>
+
+            <div className='card_cost_container'>
+                <p className='card_cost'>{props.cost} ₽</p>
+                <p className='card_cost_sell'>{Math.min(props.cost+5000, Math.floor(props.cost*(Math.random()/2+1)))} ₽</p>
+            </div>
 
             <div className='card_name_wrapper'>
                 <p className='card_name'>{props.name}</p>

@@ -10,7 +10,8 @@ from cards.api import router as cards_router
 
 api = NinjaAPI(
     title="Web 2",
-    description="This is an API for WB parsing site."
+    description="This is an API for WB parsing site.",
+    csrf=False
 )
 
 api.add_router('/', profiles_router)

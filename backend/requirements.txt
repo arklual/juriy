@@ -1,5 +1,5 @@
-django==5.0.6
-django-ninja==1.1.0
+django
+django-ninja
 jwt==1.3.1
 django-cors-headers
 selenium
@@ -7,5 +7,5 @@ bs4
 xvfbwrapper
 webdriver_manager
 fuzzywuzzy
-psycopg2
+psycopg2-binary
 pydantic

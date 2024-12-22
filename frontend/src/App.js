@@ -1,3 +1,8 @@
+/*
+Следующему программисту:
+  Предыдущий фронт устал и приуныл
+  Он искренне просим прощения за столь плохое качество кода и его сильную связанность.
+*/
 import Header from './components/Header/Header';
 import Profile from "./components/Profile/Profile";
 import Register from "./components/Register/Register";
