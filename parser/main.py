@@ -136,7 +136,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
                             if i[5] >= int(real_price):
                                 print(cat_name, url)
                                 response = requests.post(
-                                    'http://localhost:8080/api/create_card',
+                                    'http://backend:8080/api/create_card',
                                     json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
                                     headers={"Content-Type": "application/json"}
                                 )
@@ -166,7 +166,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
                         
                     print('Card appended')
                     response = requests.post(
-                        'http://localhost:8080/api/create_card',
+                        'http://backend:8080/api/create_card',
                         json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
                         headers={"Content-Type": "application/json"}
                     )
