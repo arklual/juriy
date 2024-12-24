@@ -13,7 +13,7 @@ if __name__ == "__main__":
     scheduler = BlockingScheduler(timezone=moscow_tz)  # Указываем временную зону для планировщика
     
     # Добавляем задачу с учетом временной зоны
-    scheduler.add_job(scheduled_job, CronTrigger(hour=19, minute=1, timezone=moscow_tz))
+    scheduler.add_job(scheduled_job, CronTrigger(hour=18, minute=5, timezone=moscow_tz))
     
     print("Scheduler started. Waiting for the next job...")
     try:
