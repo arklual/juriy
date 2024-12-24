@@ -19,27 +19,31 @@ from categories.models import Category
 import zoneinfo
 router = Router()
 
-@router.post('/create_card', response={201: CardSchema, 409: Error, 400: Error}, auth=AuthBearer())
+@router.post('/create_card', response={201: CardSchema, 409: Error, 400: Error})
 def create_card(request, create_card: CreateCard):
-    data_from_wb = parse(create_card.target_url)
+    #data_from_wb = parse(create_card.target_url)
+    category, _ = Category.objects.get_or_create(title=create_card.category)
     c = Card.objects.create(
-        name=data_from_wb['name'],
+        #name=data_from_wb['name'],
+        name = create_card.name,
         url=create_card.target_url,
-        image=data_from_wb['img'],
-        price=data_from_wb['price'],
-        category=get_object_or_404(Category, title=create_card.category),
+        #image=data_from_wb['img'],
+        image=create_card.img,
+        #price=data_from_wb['price'],
+        price = int(create_card.price),
+        category=category, 
         shutdown_time=create_card.shutdown_time,
         last_scrap_date=datetime.now(zoneinfo.ZoneInfo('Europe/Moscow'))
     )
     c.save()
     return (201, {
-"id": c.id,
-"name": c.name,
-"category": c.category.title,
-"price": c.price,
-"url": c.url,
-"image": c.image
-})
+        "id": c.id,
+        "name": c.name,
+        "category": c.category.title,
+        "price": c.price,
+        "url": c.url,
+        "image": c.image
+    })
 
 @router.post('/add_favorite', response={201: StatusOK, 409: Error, 400: Error}, auth=AuthBearer())
 def add_favorite(request, addfavor: AddFavor):
