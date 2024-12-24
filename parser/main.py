@@ -40,7 +40,6 @@ def read_json(file_path):
         with open(file_path, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        print("JSON file not found.")
         return {}
     except json.JSONDecodeError as e:
         print(f"Error reading JSON file: {e}")
@@ -85,13 +84,13 @@ def write_items(items):
     cur.close()
     conn.close()
 
-class CreateC1ard(BaseModel):
+class CreateCard(BaseModel):
     target_url: str
     category: str
     shutdown_time: str
 
 
-def parse_cat_page(url, cat_name, all_items):
+def parse_cat_page(url, cat_name, all_items, cat_real_name):
     try:
         service = Service(ChromeDriverManager().install())
         options = Options()
@@ -100,57 +99,101 @@ def parse_cat_page(url, cat_name, all_items):
         options.add_argument('--disable-dev-shm-usage')
         driver = webdriver.Chrome(service=service, options=options)
         driver.get(url)
-        
-        for _ in range(30):
-            ActionChains(driver).send_keys(Keys.SPACE).perform()
-            time.sleep(0.5)
-
+        for x in range(30):
+            actions = ActionChains(driver)
+            actions.send_keys(Keys.SPACE)
+            actions.perform()
+            time.sleep(.5)
         time.sleep(3)
         response = driver.page_source
         driver.close()
 
         soup = BS(response, 'html.parser')
         cards = soup.find_all("div", {"class": "product-card__wrapper"})
-
+        logging.warning(len(cards))
         result = []
-        for card in cards:
-            try:
-                name = card.find('a', {'class': 'product-card__link'}).get("aria-label")
-                url = card.find('a', {'class': 'product-card__link'}).get("href")
-                price = card.find('ins', {'class': 'price__lower-price'}).text
-                image = card.find("img", {'class': 'j-thumbnail'})['src']
+        if cards:
+            for card in cards:
+                try:
+                    name = card.find('a', {'class': 'product-card__link'}).get("aria-label")
+                    url = card.find('a', {'class': 'product-card__link'}).get("href")
+                    price = card.find('ins', {'class': 'price__lower-price'}).text
+                    image = card.find("img", {'class': 'j-thumbnail'})['src']
+                    real_price = ''
+                    for i in price:
+                        if i.isdigit():
+                            real_price += i
+                    idx_counter = 0
 
-                real_price = ''.join(filter(str.isdigit, price))
-                result.append({
-                    'category': cat_name,
-                    'name': name,
-                    'url': url,
-                    'last_price': 0,
-                    'price': int(real_price),
-                    'img_src': image
-                })
-
-                response = requests.post(
-                    'http://localhost:8080/api/create_card',
-                    json={
-                        'name': name,
-                        'price': real_price,
-                        'img': image,
-                        'target_url': url,
+                    for i in all_items:
+                        time.sleep(1)
+                        if i[3] == url:  # Assuming url is the 4th column in the items table
+                            print(url, 'Вход карточки в воронку')
+                            logging.warning("вход в воронку")
+                            #i[4] = i[5]  # last_price = price
+                            #i[5] = int(real_price)  # price = new price
+                            
+                            if i[5] >= int(real_price):
+                                print(cat_name, url)
+                                response = requests.post(
+                                    'http://localhost:8080/api/create_card',
+                                    json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
+                                    headers={"Content-Type": "application/json"}
+                                )
+                                print(response.status_code)
+                                print(response.json())
+                                logging.warning(response.status_code)
+                                result.append({
+                                    'category': cat_name,
+                                    'name': name,
+                                    'url': url,
+                                    'last_price': i[5],
+                                    'price': int(real_price),
+                                    'img_src': image
+                                })
+                        else:
+                            print('Card appended')
+                            result.append({
+                                'category': cat_name,
+                                'name': name,
+                                'url': url,
+                                'last_price': 0,
+                                'price': int(real_price),
+                                'img_src': image
+                            })
+                            idx_counter += 1
+                        logging.warning(len(result))
+                        
+                    print('Card appended')
+                    response = requests.post(
+                        'http://localhost:8080/api/create_card',
+                        json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
+                        headers={"Content-Type": "application/json"}
+                    )
+                    time.sleep(1)
+                    print(response.status_code)
+                    print(response.json())
+                    result.append({
                         'category': cat_name,
-                        'shutdown_time': '01-01-2100'
-                    },
-                    headers={"Content-Type": "application/json"}
-                )
-                print(response.status_code, response.json())
-            except Exception as e:
-                logging.critical(f"Error parsing card: {e}")
+                        'name': name,
+                        'url': url,
+                        'last_price': 0,
+                        'price': int(real_price),
+                        'img_src': image
+                    })
+                    logging.warning(len(result))
+                    idx_counter += 1
+                except Exception as e:
+                    logging.critical(e)
 
+                    
         return result
-    except Exception as e:
-        logging.critical(f"Error in parse_cat_page: {e}")
-        return None
 
+    except Exception as e:
+        print(e)
+        logging.critical(e)
+
+        return None
 
 
 WB_BASE_LINK = 'https://www.wildberries.ru'
@@ -160,19 +203,20 @@ def main_scraper():
     create_table()
     cats = read_json('subcategories.json')
     all_items = read_items()
-
-    for cat in cats['subcats']:
-        url_suffix = cat['url']
-        category_name = cat['name']
-        cnt = 1
-        while True:
-            full_url = WB_BASE_LINK + url_suffix + f'?sort=popular&page={cnt}'
-            print(f"Scraping {full_url} for category {category_name}")
-            items = parse_cat_page(full_url, category_name, all_items)
-            if not items:
-                break
-            write_items(items)
-            cnt += 1
+    #print(all_items)
+    #for cat in cats:
+    cnt = 1
+    while cnt < 2:
+        category_name = cats['subcats'][-1]['url'].replace("/catalog/dom/", '')
+        category_real_name = cats['subcats'][-1]['name']
+        logging.warning(category_name)
+        items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items, category_real_name)
+        #print(len(items))
+        logging.warning(len(items))
+        if len(items) == 0:
+            break
+        write_items(items)
+        cnt += 1
 
 
 #main_scraper()
