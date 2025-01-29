@@ -14,6 +14,7 @@ from selenium.webdriver.chrome.options import Options
 import json
 import logging
 
+DELTA = 0,1
 
 def create_table():
     conn = get_db_connection()
@@ -112,89 +113,76 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
         cards = soup.find_all("div", {"class": "product-card__wrapper"})
         logging.warning(len(cards))
         result = []
+
+        # Создаем словарь существующих товаров для быстрого поиска по URL
+        existing_items = {item[3]: item for item in all_items}  # item[3] - URL
+
         if cards:
             for card in cards:
                 try:
                     name = card.find('a', {'class': 'product-card__link'}).get("aria-label")
                     url = card.find('a', {'class': 'product-card__link'}).get("href")
-                    price = card.find('ins', {'class': 'price__lower-price'}).text
+                    price_element = card.find('ins', {'class': 'price__lower-price'})
+                    if not price_element:
+                        continue
+                    price = price_element.text
                     image = card.find("img", {'class': 'j-thumbnail'})['src']
-                    real_price = ''
-                    for i in price:
-                        if i.isdigit():
-                            real_price += i
-                    idx_counter = 0
 
-                    for i in all_items:
-                        time.sleep(1)
-                        if i[3] == url:  # Assuming url is the 4th column in the items table
-                            print(url, 'Вход карточки в воронку')
-                            logging.warning("вход в воронку")
-                            #i[4] = i[5]  # last_price = price
-                            #i[5] = int(real_price)  # price = new price
-                            
-                            if i[5] >= int(real_price):
-                                print(cat_name, url)
-                                response = requests.post(
-                                    'http://backend:8080/api/create_card',
-                                    json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
-                                    headers={"Content-Type": "application/json"}
-                                )
-                                print(response.status_code)
-                                print(response.json())
-                                logging.warning(response.status_code)
-                                result.append({
-                                    'category': cat_name,
-                                    'name': name,
-                                    'url': url,
-                                    'last_price': i[5],
-                                    'price': int(real_price),
-                                    'img_src': image
-                                })
-                        else:
-                            print('Card appended')
-                            result.append({
-                                'category': cat_name,
-                                'name': name,
-                                'url': url,
-                                'last_price': 0,
-                                'price': int(real_price),
-                                'img_src': image
-                            })
-                            idx_counter += 1
-                        logging.warning(len(result))
-                        
-                    print('Card appended')
-                    response = requests.post(
-                        'http://backend:8080/api/create_card',
-                        json={'name': name, 'price': real_price, 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
-                        headers={"Content-Type": "application/json"}
-                    )
-                    time.sleep(1)
-                    print(response.status_code)
-                    print(response.json())
-                    result.append({
-                        'category': cat_name,
-                        'name': name,
-                        'url': url,
-                        'last_price': 0,
-                        'price': int(real_price),
-                        'img_src': image
-                    })
-                    logging.warning(len(result))
-                    idx_counter += 1
+                    # Очищаем цену от лишних символов
+                    real_price = ''.join(filter(str.isdigit, price))
+                    if not real_price:
+                        continue
+                    real_price = int(real_price)
+
+                    # Проверяем, есть ли товар в базе
+                    if url in existing_items:
+                        # Получаем данные из базы
+                        db_item = existing_items[url]
+                        last_price = db_item[5]  # Текущая цена в базе (price)
+
+                        # Если текущая цена в базе больше новой цены
+                        if int(last_price)*(1-DELTA) > int(real_price):
+                            # Отправляем запрос на добавление
+                            response = requests.post(
+                                'http://backend:8080/api/create_card',
+                                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
+                                headers={"Content-Type": "application/json"}
+                            )
+
+                            time.sleep(1)
+                            logging.warning(f"Response status: {response.status_code}")
+
+                        # Добавляем в результат для обновления БД
+                        result.append({
+                            'category': cat_name,
+                            'name': name,
+                            'url': url,
+                            'last_price': last_price,
+                            'price': real_price,
+                            'img_src': image
+                        })
+                    else:
+                        # Новый товар, добавляем в базу с last_price=0
+                        result.append({
+                            'category': cat_name,
+                            'name': name,
+                            'url': url,
+                            'last_price': 0,
+                            'price': real_price,
+                            'img_src': image
+                        })
+                        # Если нужно отправлять новые товары сразу, раскомментируйте:
+                        # response = requests.post(...)
+
                 except Exception as e:
-                    logging.critical(e)
+                    logging.critical(f"Error processing card: {e}")
+                    continue
 
-                    
         return result
 
     except Exception as e:
-        print(e)
-        logging.critical(e)
-
+        logging.critical(f"General error: {e}")
         return None
-
 
 WB_BASE_LINK = 'https://www.wildberries.ru'
 

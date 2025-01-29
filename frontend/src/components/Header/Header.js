@@ -71,9 +71,7 @@ const Header = () => {
         <header>
             <div className='header_container'>
                 
-                <a href="/" className='header_logo_parent'>
-                    <img src={logo} alt="logo" className='headr_logo'/>
-                </a>
+                <h2 className="headr_logo">IDEAPIK</h2>
 
                 <SideMenu/>
                 

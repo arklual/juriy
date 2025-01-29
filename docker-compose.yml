@@ -1,4 +1,4 @@
-version: '3'
+version: '4'
 services:
   pgdb:
     image: postgres
@@ -26,11 +26,21 @@ services:
     ports:
       - '3000:3000'
     restart: always
+    develop:
+      watch:
+        - path: ./frontend
+          action: rebuild
   parser:
     build: ./parser
     container_name: parser
     depends_on:
       - backend
+    develop:
+      watch:
+        - path: parser/scheduler.py
+          action: rebuild
+        - path: parser/main.py
+          action: rebuild
 volumes:
   pgdbdata: null
 networks:
