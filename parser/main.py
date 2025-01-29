@@ -1,3 +1,5 @@
+import datetime
+
 import psycopg2
 from pydantic import BaseModel
 import requests
@@ -16,6 +18,7 @@ import logging
 import pandas as pd
 import re
 import urllib.parse
+import os
 
 DELTA = 0.1
 
@@ -148,7 +151,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
                             # Отправляем запрос на добавление
                             response = requests.post(
                                 'http://backend:8080/api/create_card',
-                                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': '01-01-2100'},
+                                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
                                 headers={"Content-Type": "application/json"}
                             )
 
@@ -213,17 +216,14 @@ def main_scraper():
     df = df[0].astype(str)
 
     words = df.apply(lambda x: " ".join(re.findall(r"\b[а-яА-Яa-zA-Z]+\b", x))).tolist()
+    cnt = int(os.environ.get('CNT', 1))
 
     for s in words:
-        cnt = 1
-        while cnt < 2:
-            logging.warning(s)
-            encoded_s = urllib.parse.quote(s)
-            items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={cnt}', s, all_items, s)
-            logging.warning(len(items))
-            if len(items) == 0:
-                break
+        logging.warning(f'{s} {cnt}')
+        encoded_s = urllib.parse.quote(s)
+        items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={cnt}', s, all_items, s)
+        logging.warning(len(items))
+        if items:
             write_items(items)
-            cnt += 1
 
 #main_scraper()
