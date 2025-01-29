@@ -13,8 +13,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import json
 import logging
+import pandas as pd
+import re
+import urllib.parse
 
-DELTA = 0,1
+DELTA = 0.1
 
 def create_table():
     conn = get_db_connection()
@@ -184,27 +187,43 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
         logging.critical(f"General error: {e}")
         return None
 
-WB_BASE_LINK = 'https://www.wildberries.ru'
+WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
 
 
 def main_scraper():
     create_table()
-    cats = read_json('subcategories.json')
+    # cats = read_json('subcategories.json')
     all_items = read_items()
     #print(all_items)
-    #for cat in cats:
-    cnt = 1
-    while cnt < 2:
-        category_name = cats['subcats'][-1]['url'].replace("/catalog/dom/", '')
-        category_real_name = cats['subcats'][-1]['name']
-        logging.warning(category_name)
-        items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items, category_real_name)
-        #print(len(items))
-        logging.warning(len(items))
-        if len(items) == 0:
-            break
-        write_items(items)
-        cnt += 1
+    # for cat in cats:
+    #     cnt = 1
+    #     while cnt < 2:
+    #         category_name = cat['url']
+    #         category_real_name = cat['name']
+    #         logging.warning(category_name)
+    #         items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items, category_real_name)
+    #         #print(len(items))
+    #         logging.warning(len(items))
+    #         if len(items) == 0:
+    #             break
+    #         write_items(items)
+    #         cnt += 1
 
+    df = pd.read_excel("table.xlsx", header=None)
+    df = df[0].astype(str)
+
+    words = df.apply(lambda x: " ".join(re.findall(r"\b[а-яА-Яa-zA-Z]+\b", x))).tolist()
+
+    for s in words:
+        cnt = 1
+        while cnt < 2:
+            logging.warning(s)
+            encoded_s = urllib.parse.quote(s)
+            items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={cnt}', s, all_items, s)
+            logging.warning(len(items))
+            if len(items) == 0:
+                break
+            write_items(items)
+            cnt += 1
 
 #main_scraper()

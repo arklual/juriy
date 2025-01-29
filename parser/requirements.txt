@@ -5,3 +5,5 @@ webdriver-manager==4.0.2
 apscheduler==3.11.0
 pydantic
 pytz
+pandas
+openpyxl
