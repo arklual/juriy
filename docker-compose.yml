@@ -5,12 +5,6 @@ x-parser-template: &parser-template
   depends_on:
     - backend
   restart: always
-  develop:
-    watch:
-      - path: parser/scheduler.py
-        action: rebuild
-      - path: parser/main.py
-        action: rebuild
 
 services:
   pgdb:
