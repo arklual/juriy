@@ -71,7 +71,7 @@ const Header = () => {
         <header>
             <div className='header_container'>
                 
-                <h2 className="headr_logo">IDEAPIK</h2>
+                <h2 className="headr_logo">IDEALPICK</h2>
 
                 <SideMenu/>
                 
