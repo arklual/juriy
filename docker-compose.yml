@@ -4,11 +4,6 @@ x-parser-template: &parser-template
   build: ./parser
   depends_on:
     - backend
-  deploy:
-    resources:
-      limits:
-        cpus: '1'
-        memory: 2G
   restart: always
 
 services:

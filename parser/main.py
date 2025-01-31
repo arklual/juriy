@@ -19,8 +19,9 @@ import pandas as pd
 import re
 import urllib.parse
 import os
+from multiprocessing.pool import ThreadPool
 
-DELTA = 0.1
+DELTA = 0.01
 
 def create_table():
   conn = get_db_connection()
@@ -117,11 +118,17 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
 
     soup = BS(response, 'html.parser')
     cards = soup.find_all("div", {"class": "product-card__wrapper"})
-    logging.warning(len(cards))
     result = []
 
     # Создаем словарь существующих товаров для быстрого поиска по URL
-    existing_items = {item[3]: item for item in all_items}  # item[3] - URL
+    existing_items = {}
+    for item in all_items:
+      # Проверяем, что кортеж содержит минимум 4 элемента
+      if len(item) >= 4:
+        url_from_db = item[3]  # URL находится на 4-й позиции
+        existing_items[url_from_db] = item
+      else:
+        logging.error(f"Invalid item structure: {item}")
 
     if cards:
       for card in cards:
@@ -144,7 +151,12 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           if url in existing_items:
             # Получаем данные из базы
             db_item = existing_items[url]
-            last_price = db_item[5]  # Текущая цена в базе (price)
+            last_price = 0
+            if len(db_item) > 5:  # Проверяем, что кортеж содержит хотя бы 6 элементов
+                last_price = db_item[5]  # Текущая цена в базе (price)
+            else:
+              logging.error(f"Invalid tuple length: {db_item}")
+              continue
 
             # Если текущая цена в базе больше новой цены
             if int(last_price)*(1-DELTA) > int(real_price):
@@ -187,24 +199,28 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
     return result
 
   except Exception as e:
-    logging.critical(f"General error: {e}")
-    return None
+    logging.critical(f"General error: {e}", exc_info=True)
+    return []  # Возвращаем пустой список вместо None
 
 WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
 
 def process_word(args):
   s, cnt, all_items = args
-  start_page = (cnt - 1) * 10 + 1
-  end_page = cnt * 10
+  pages = 50
+  start_page = (cnt - 1) * pages + 1
+  end_page = cnt * pages
   logging.warning(f"Processing {s} (page: {start_page}-{end_page})")
   encoded_s = urllib.parse.quote(s)
-  all_items = []
-  for i in (start_page, end_page):
+  parsed_items = []
+  for i in range(start_page, end_page+1):
     items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={i}', s, all_items, s)
-    logging.warning(len(items))
     if items:
-      all_items.extend(items)
-  write_items(all_items)
+      logging.warning(len(items))
+      parsed_items.extend(items)
+    else:
+      logging.error(f"No items found or error occurred for {s} on page {i}")
+
+  write_items(parsed_items)
 
 def main_scraper():
   create_table()
@@ -230,10 +246,10 @@ def main_scraper():
 
   words = df.apply(lambda x: " ".join(re.findall(r"\b[а-яА-Яa-zA-Z]+\b", x))).tolist()
 
-  tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 11)]
+  tasks = [(s, cnt, all_items) for s in words[0:2] for cnt in range(1, 2)]
 
   # Запускаем 10 процессов
-  with Pool(processes=10) as pool:
+  with Pool(processes=1) as pool:
     pool.map(process_word, tasks)
 
 #main_scraper()
