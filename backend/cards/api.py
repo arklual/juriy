@@ -21,16 +21,14 @@ router = Router()
 
 @router.post('/create_card', response={201: CardSchema, 409: Error, 400: Error})
 def create_card(request, create_card: CreateCard):
-    #data_from_wb = parse(create_card.target_url)
+    if Card.objects.filter(url=create_card.target_url).exists():
+        return (409, {"detail": "A card with this URL already exists."})
     category, _ = Category.objects.get_or_create(title=create_card.category)
     c = Card.objects.create(
-        #name=data_from_wb['name'],
-        name = create_card.name,
+        name=create_card.name,
         url=create_card.target_url,
-        #image=data_from_wb['img'],
         image=create_card.img,
-        #price=data_from_wb['price'],
-        price = int(create_card.price),
+        price=int(create_card.price),
         category=category, 
         shutdown_time=create_card.shutdown_time,
         last_scrap_date=datetime.now(zoneinfo.ZoneInfo('Europe/Moscow'))
@@ -44,7 +42,7 @@ def create_card(request, create_card: CreateCard):
         "url": c.url,
         "image": c.image
     })
-
+    
 @router.post('/add_favorite', response={201: StatusOK, 409: Error, 400: Error}, auth=AuthBearer())
 def add_favorite(request, addfavor: AddFavor):
     card = get_object_or_404(Card, id=addfavor.card_id)
