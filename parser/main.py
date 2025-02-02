@@ -21,7 +21,7 @@ import urllib.parse
 import os
 from multiprocessing.pool import ThreadPool
 
-DELTA = 0.01
+DELTA = 0.3
 
 def create_table():
   conn = get_db_connection()
@@ -152,14 +152,16 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
             # Получаем данные из базы
             db_item = existing_items[url]
             last_price = 0
+            last_price_db = 0
             if len(db_item) > 5:  # Проверяем, что кортеж содержит хотя бы 6 элементов
                 last_price = db_item[5]  # Текущая цена в базе (price)
+                last_price_db = db_item[4]
             else:
               logging.error(f"Invalid tuple length: {db_item}")
               continue
 
             # Если текущая цена в базе больше новой цены
-            if int(last_price)*(1-DELTA) > int(real_price):
+            if (int(last_price_db) > int(last_price)*(1-DELTA) > int(real_price)) or (int(last_price_db)*(1-DELTA) > int(last_price) > int(real_price)):
               # Отправляем запрос на добавление
               response = requests.post(
                 'http://backend:8080/api/create_card',
@@ -202,11 +204,12 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
     logging.critical(f"General error: {e}", exc_info=True)
     return []  # Возвращаем пустой список вместо None
 
+
 WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
 
 def process_word(args):
   s, cnt, all_items = args
-  pages = 50
+  pages = 1
   start_page = (cnt - 1) * pages + 1
   end_page = cnt * pages
   logging.warning(f"Processing {s} (page: {start_page}-{end_page})")
@@ -215,7 +218,7 @@ def process_word(args):
   for i in range(start_page, end_page+1):
     items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={i}', s, all_items, s)
     if items:
-      logging.warning(len(items))
+      logging.warning(f'page: {i} length: {len(items)}')
       parsed_items.extend(items)
     else:
       logging.error(f"No items found or error occurred for {s} on page {i}")
@@ -246,7 +249,7 @@ def main_scraper():
 
   words = df.apply(lambda x: " ".join(re.findall(r"\b[а-яА-Яa-zA-Z]+\b", x))).tolist()
 
-  tasks = [(s, cnt, all_items) for s in words[0:2] for cnt in range(1, 2)]
+  tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
   # Запускаем 10 процессов
   with Pool(processes=1) as pool:
