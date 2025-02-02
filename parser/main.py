@@ -10,9 +10,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup as BS
 from selenium.webdriver.common.by import By
 import time
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
 import json
 import logging
 import pandas as pd
@@ -42,7 +42,6 @@ def create_table():
   cur.close()
   conn.close()
 
-
 def read_json(file_path):
   try:
     with open(file_path, 'r') as f:
@@ -53,8 +52,6 @@ def read_json(file_path):
     print(f"Error reading JSON file: {e}")
     return {}
 
-
-# Database connection
 def get_db_connection():
   conn = psycopg2.connect(
     dbname='postgres',
@@ -65,7 +62,6 @@ def get_db_connection():
   )
   return conn
 
-
 def read_items():
   conn = get_db_connection()
   cur = conn.cursor()
@@ -74,7 +70,6 @@ def read_items():
   cur.close()
   conn.close()
   return items
-
 
 def write_items(items):
   conn = get_db_connection()
@@ -97,15 +92,13 @@ class CreateCard(BaseModel):
   category: str
   shutdown_time: str
 
-
 def parse_cat_page(url, cat_name, all_items, cat_real_name):
   try:
-    service = Service(ChromeDriverManager().install())
-    options = Options()
+    options = webdriver.FirefoxOptions()
     options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(service=service, options=options)
+    options.add_argument('--disable-gpu')
+    driver = webdriver.Firefox(options=options, service=webdriver.FirefoxService(executable_path="/usr/local/bin/geckodriver"))
+
     driver.get(url)
     for x in range(30):
       actions = ActionChains(driver)
@@ -114,18 +107,16 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
       time.sleep(.5)
     time.sleep(3)
     response = driver.page_source
-    driver.close()
+    driver.quit()
 
     soup = BS(response, 'html.parser')
     cards = soup.find_all("div", {"class": "product-card__wrapper"})
     result = []
 
-    # Создаем словарь существующих товаров для быстрого поиска по URL
     existing_items = {}
     for item in all_items:
-      # Проверяем, что кортеж содержит минимум 4 элемента
       if len(item) >= 4:
-        url_from_db = item[3]  # URL находится на 4-й позиции
+        url_from_db = item[3]
         existing_items[url_from_db] = item
       else:
         logging.error(f"Invalid item structure: {item}")
@@ -141,38 +132,31 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           price = price_element.text
           image = card.find("img", {'class': 'j-thumbnail'})['src']
 
-          # Очищаем цену от лишних символов
           real_price = ''.join(filter(str.isdigit, price))
           if not real_price:
             continue
           real_price = int(real_price)
 
-          # Проверяем, есть ли товар в базе
           if url in existing_items:
-            # Получаем данные из базы
             db_item = existing_items[url]
             last_price = 0
             last_price_db = 0
-            if len(db_item) > 5:  # Проверяем, что кортеж содержит хотя бы 6 элементов
-                last_price = db_item[5]  # Текущая цена в базе (price)
-                last_price_db = db_item[4]
+            if len(db_item) > 5:
+              last_price = db_item[5]
+              last_price_db = db_item[4]
             else:
               logging.error(f"Invalid tuple length: {db_item}")
               continue
 
-            # Если текущая цена в базе больше новой цены
             if (int(last_price_db) > int(last_price)*(1-DELTA) > int(real_price)) or (int(last_price_db)*(1-DELTA) > int(last_price) > int(real_price)):
-              # Отправляем запрос на добавление
               response = requests.post(
                 'http://backend:8080/api/create_card',
                 json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
                 headers={"Content-Type": "application/json"}
               )
-
               time.sleep(1)
               logging.warning(f"Response status: {response.status_code}")
 
-            # Добавляем в результат для обновления БД
             result.append({
               'category': cat_name,
               'name': name,
@@ -182,7 +166,6 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
               'img_src': image
             })
           else:
-            # Новый товар, добавляем в базу с last_price=0
             result.append({
               'category': cat_name,
               'name': name,
@@ -191,8 +174,6 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
               'price': real_price,
               'img_src': image
             })
-            # Если нужно отправлять новые товары сразу, раскомментируйте:
-            # response = requests.post(...)
 
         except Exception as e:
           logging.critical(f"Error processing card: {e}")
@@ -202,8 +183,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
 
   except Exception as e:
     logging.critical(f"General error: {e}", exc_info=True)
-    return []  # Возвращаем пустой список вместо None
-
+    return []
 
 WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
 
@@ -227,22 +207,7 @@ def process_word(args):
 
 def main_scraper():
   create_table()
-  # cats = read_json('subcategories.json')
   all_items = read_items()
-  #print(all_items)
-  # for cat in cats:
-  #     cnt = 1
-  #     while cnt < 2:
-  #         category_name = cat['url']
-  #         category_real_name = cat['name']
-  #         logging.warning(category_name)
-  #         items = parse_cat_page(WB_BASE_LINK + category_name + f'?sort=popular&page={cnt}', category_name, all_items, category_real_name)
-  #         #print(len(items))
-  #         logging.warning(len(items))
-  #         if len(items) == 0:
-  #             break
-  #         write_items(items)
-  #         cnt += 1
 
   df = pd.read_excel("table.xlsx", header=None)
   df = df[0].astype(str)
@@ -251,8 +216,8 @@ def main_scraper():
 
   tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
-  # Запускаем 10 процессов
   with Pool(processes=1) as pool:
     pool.map(process_word, tasks)
 
-#main_scraper()
+if __name__ == "__main__":
+  main_scraper()
