@@ -1,14 +1,12 @@
 import datetime
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 import psycopg2
 from pydantic import BaseModel
 import requests
-from psycopg2 import sql
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup as BS
-from selenium.webdriver.common.by import By
 import time
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.service import Service
@@ -18,12 +16,43 @@ import logging
 import pandas as pd
 import re
 import urllib.parse
-import os
-from multiprocessing.pool import ThreadPool
+from threading import Lock
 
+# Константы
 DELTA = 0.3
+WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Глобальные переменные для драйвера и блокировки
+driver_lock = Lock()
+driver_instance = None
+
+def get_driver():
+  """Инициализация WebDriver с блокировкой."""
+  global driver_instance
+  with driver_lock:
+    if driver_instance is None:
+      options = webdriver.FirefoxOptions()
+      options.add_argument('--headless')
+      options.add_argument('--disable-gpu')
+      driver_instance = webdriver.Firefox(options=options, service=webdriver.FirefoxService(executable_path="/usr/local/bin/geckodriver"))
+      logger.info("WebDriver initialized.")
+  return driver_instance
+
+def close_driver():
+  """Закрытие WebDriver с блокировкой."""
+  global driver_instance
+  with driver_lock:
+    if driver_instance is not None:
+      driver_instance.quit()
+      driver_instance = None
+      logger.info("WebDriver closed.")
 
 def create_table():
+  """Создание таблицы в базе данных."""
   conn = get_db_connection()
   cur = conn.cursor()
   cur.execute("""
@@ -42,17 +71,8 @@ def create_table():
   cur.close()
   conn.close()
 
-def read_json(file_path):
-  try:
-    with open(file_path, 'r') as f:
-      return json.load(f)
-  except FileNotFoundError:
-    return {}
-  except json.JSONDecodeError as e:
-    print(f"Error reading JSON file: {e}")
-    return {}
-
 def get_db_connection():
+  """Установка соединения с базой данных."""
   conn = psycopg2.connect(
     dbname='postgres',
     user='postgres',
@@ -63,6 +83,7 @@ def get_db_connection():
   return conn
 
 def read_items():
+  """Чтение всех товаров из базы данных."""
   conn = get_db_connection()
   cur = conn.cursor()
   cur.execute("SELECT * FROM items")
@@ -72,6 +93,7 @@ def read_items():
   return items
 
 def write_items(items):
+  """Запись товаров в базу данных."""
   conn = get_db_connection()
   cur = conn.cursor()
   for item in items:
@@ -87,39 +109,24 @@ def write_items(items):
   cur.close()
   conn.close()
 
-class CreateCard(BaseModel):
-  target_url: str
-  category: str
-  shutdown_time: str
-
 def parse_cat_page(url, cat_name, all_items, cat_real_name):
+  """Парсинг страницы категории."""
   try:
-    options = webdriver.FirefoxOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    driver = webdriver.Firefox(options=options, service=webdriver.FirefoxService(executable_path="/usr/local/bin/geckodriver"))
-
+    driver = get_driver()
     driver.get(url)
-    for x in range(30):
-      actions = ActionChains(driver)
-      actions.send_keys(Keys.SPACE)
-      actions.perform()
-      time.sleep(.5)
+
+    # Прокрутка для загрузки всех элементов
+    for _ in range(30):
+      ActionChains(driver).send_keys(Keys.SPACE).perform()
+      time.sleep(0.5)
+
     time.sleep(3)
     response = driver.page_source
-    driver.quit()
-
     soup = BS(response, 'html.parser')
     cards = soup.find_all("div", {"class": "product-card__wrapper"})
     result = []
 
-    existing_items = {}
-    for item in all_items:
-      if len(item) >= 4:
-        url_from_db = item[3]
-        existing_items[url_from_db] = item
-      else:
-        logging.error(f"Invalid item structure: {item}")
+    existing_items = {item[3]: item for item in all_items if len(item) >= 4}
 
     if cards:
       for card in cards:
@@ -132,92 +139,82 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           price = price_element.text
           image = card.find("img", {'class': 'j-thumbnail'})['src']
 
-          real_price = ''.join(filter(str.isdigit, price))
+          real_price = int(''.join(filter(str.isdigit, price)))
           if not real_price:
             continue
-          real_price = int(real_price)
 
           if url in existing_items:
             db_item = existing_items[url]
-            last_price = 0
-            last_price_db = 0
-            if len(db_item) > 5:
-              last_price = db_item[5]
-              last_price_db = db_item[4]
-            else:
-              logging.error(f"Invalid tuple length: {db_item}")
-              continue
+            last_price = db_item[4] if len(db_item) > 4 else 0
+            last_price_db = db_item[5] if len(db_item) > 5 else 0
 
-            if (int(last_price_db) > int(last_price)*(1-DELTA) > int(real_price)) or (int(last_price_db)*(1-DELTA) > int(last_price) > int(real_price)):
+            if (int(last_price_db) > int(last_price) * (1 - DELTA) > int(real_price)) or (int(last_price_db) * (1 - DELTA) > int(last_price) > int(real_price)):
               response = requests.post(
                 'http://backend:8080/api/create_card',
                 json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
                 headers={"Content-Type": "application/json"}
               )
               time.sleep(1)
-              logging.warning(f"Response status: {response.status_code}")
+              logger.warning(f"Response status: {response.status_code}")
 
-            result.append({
-              'category': cat_name,
-              'name': name,
-              'url': url,
-              'last_price': last_price,
-              'price': real_price,
-              'img_src': image
-            })
-          else:
-            result.append({
-              'category': cat_name,
-              'name': name,
-              'url': url,
-              'last_price': 0,
-              'price': real_price,
-              'img_src': image
-            })
+          result.append({
+            'category': cat_name,
+            'name': name,
+            'url': url,
+            'last_price': last_price if url in existing_items else 0,
+            'price': real_price,
+            'img_src': image
+          })
 
         except Exception as e:
-          logging.critical(f"Error processing card: {e}")
+          logger.error(f"Error processing card: {e}")
           continue
 
     return result
 
   except Exception as e:
-    logging.critical(f"General error: {e}", exc_info=True)
+    logger.critical(f"General error: {e}", exc_info=True)
     return []
 
-WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
-
 def process_word(args):
+  """Обработка одного слова."""
   s, cnt, all_items = args
   pages = 1
   start_page = (cnt - 1) * pages + 1
   end_page = cnt * pages
-  logging.warning(f"Processing {s} (page: {start_page}-{end_page})")
+  logger.warning(f"Processing {s} (page: {start_page}-{end_page})")
   encoded_s = urllib.parse.quote(s)
   parsed_items = []
-  for i in range(start_page, end_page+1):
+  for i in range(start_page, end_page + 1):
     items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={i}', s, all_items, s)
     if items:
-      logging.warning(f'page: {i} length: {len(items)}')
+      logger.warning(f'page: {i} length: {len(items)}')
       parsed_items.extend(items)
     else:
-      logging.error(f"No items found or error occurred for {s} on page {i}")
+      logger.error(f"No items found or error occurred for {s} on page {i}")
 
   write_items(parsed_items)
 
 def main_scraper():
+  """Основная функция парсера."""
   create_table()
   all_items = read_items()
 
-  df = pd.read_excel("table.xlsx", header=None)
-  df = df[0].astype(str)
+  try:
+    # Инициализация драйвера
+    get_driver()
 
-  words = df.apply(lambda x: " ".join(re.findall(r"\b[а-яА-Яa-zA-Z]+\b", x))).tolist()
+    df = pd.read_excel("table.xlsx", header=None)
+    words = "".join(df[0].astype(str).toList()).split(',')
 
-  tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
+    tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
-  with Pool(processes=1) as pool:
-    pool.map(process_word, tasks)
+    # Использование ThreadPool
+    with ThreadPool(processes=2) as pool:  # Увеличьте количество потоков, если нужно
+      pool.map(process_word, tasks)
+
+  finally:
+    close_driver()  # Гарантированное закрытие драйвера
 
 if __name__ == "__main__":
   main_scraper()
