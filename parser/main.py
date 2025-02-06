@@ -205,7 +205,7 @@ def main_scraper():
     get_driver()
 
     df = pd.read_excel("table.xlsx", header=None)
-    words = "".join(df[0].astype(str).toList()).split(',')
+    words = "".join(df[0].astype(str).to_list()).split(',')
 
     tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
