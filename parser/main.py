@@ -126,7 +126,13 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
     cards = soup.find_all("div", {"class": "product-card__wrapper"})
     result = []
 
-    existing_items = {item[3]: item for item in all_items if len(item) >= 4}
+    existing_items = {}
+    for item in all_items:
+      if len(item) >= 4:
+        url_from_db = item[3]
+        existing_items[url_from_db] = item
+      else:
+        logging.error(f"Invalid item structure: {item}")
 
     if cards:
       for card in cards:
@@ -145,8 +151,14 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
 
           if url in existing_items:
             db_item = existing_items[url]
-            last_price = db_item[4] if len(db_item) > 4 else 0
-            last_price_db = db_item[5] if len(db_item) > 5 else 0
+            last_price = 0
+            last_price_db = 0
+            if len(db_item) > 5:
+              last_price = db_item[5]
+              last_price_db = db_item[4]
+            else:
+              logging.error(f"Invalid tuple length: {db_item}")
+              continue
 
             if (int(last_price_db) > int(last_price) * (1 - DELTA) > int(real_price)) or (int(last_price_db) * (1 - DELTA) > int(last_price) > int(real_price)):
               response = requests.post(
@@ -155,16 +167,25 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
                 headers={"Content-Type": "application/json"}
               )
               time.sleep(1)
-              logger.warning(f"Response status: {response.status_code}")
+              logging.warning(f"Response status: {response.status_code}")
 
-          result.append({
-            'category': cat_name,
-            'name': name,
-            'url': url,
-            'last_price': last_price if url in existing_items else 0,
-            'price': real_price,
-            'img_src': image
-          })
+            result.append({
+              'category': cat_name,
+              'name': name,
+              'url': url,
+              'last_price': last_price,
+              'price': real_price,
+              'img_src': image
+            })
+          else:
+            result.append({
+              'category': cat_name,
+              'name': name,
+              'url': url,
+              'last_price': 0,
+              'price': real_price,
+              'img_src': image
+            })
 
         except Exception as e:
           logger.error(f"Error processing card: {e}")
@@ -201,11 +222,15 @@ def main_scraper():
   all_items = read_items()
 
   try:
-    # Инициализация драйвера
     get_driver()
 
     df = pd.read_excel("table.xlsx", header=None)
-    words = "".join(df[0].astype(str).to_list()).split(',')
+    words = []
+    for item in df[0].astype(str):
+      cleaned_item = re.sub(r'^\d+', '', item)
+      words.extend(cleaned_item.split(','))
+
+    words = [word.strip() for word in words if word.strip()]
 
     tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
