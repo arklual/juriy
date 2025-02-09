@@ -51,7 +51,7 @@ def close_driver():
       logger.info("WebDriver closed.")
 
 def get_items():
-  response = requests.get("http://backend:8080/api/get_cards")
+  response = requests.get("http://backend:8080/api/get_cards?start=0&count=1000000&sort=recent")
   if response.status_code == 200:
     return response.json()
   return []
