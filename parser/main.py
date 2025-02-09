@@ -152,15 +152,13 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           if url in existing_items:
             db_item = existing_items[url]
             last_price = 0
-            last_price_db = 0
             if len(db_item) > 5:
               last_price = db_item[5]
-              last_price_db = db_item[4]
             else:
               logging.error(f"Invalid tuple length: {db_item}")
               continue
 
-            if (int(last_price_db) > int(last_price) * (1 - DELTA) > int(real_price)) or (int(last_price_db) * (1 - DELTA) > int(last_price) > int(real_price)):
+            if int(last_price) * (1 - DELTA) > int(real_price):
               response = requests.post(
                 'http://backend:8080/api/create_card',
                 json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
@@ -235,7 +233,7 @@ def main_scraper():
     tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
     # Использование ThreadPool
-    with ThreadPool(processes=2) as pool:  # Увеличьте количество потоков, если нужно
+    with ThreadPool(processes=5) as pool:  # Увеличьте количество потоков, если нужно
       pool.map(process_word, tasks)
 
   finally:
