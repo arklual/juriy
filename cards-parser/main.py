@@ -51,7 +51,7 @@ def close_driver():
       logger.info("WebDriver closed.")
 
 def get_items():
-  response = requests.get("http://backend:8080/api/get_cards?start=0&count=1000000&sort=recent")
+  response = requests.get("http://idealpick.ru:8080/api/get_cards?start=0&count=1000000&sort=recent")
   if response.status_code == 200:
     return response.json()
   return []
@@ -60,7 +60,7 @@ def get_items():
 
 def delete_card(id):
   response = requests.delete(
-    f'http://backend:8080/api/delete_card/{id}',
+    f'http://idealpick.ru:8080/api/delete_card/{id}',
     headers={"Content-Type": "application/json"}
   )
   time.sleep(1)
