@@ -19,7 +19,7 @@ import urllib.parse
 from threading import Lock
 
 # Константы
-DELTA = 0.3
+DELTA = 0.1
 WB_BASE_LINK = 'https://www.wildberries.ru/catalog/0/search.aspx'
 
 # Настройка логирования
