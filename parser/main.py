@@ -159,13 +159,28 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
               continue
 
             if int(last_price) * (1 - DELTA) > int(real_price):
-              response = requests.post(
-                'http://backend:8080/api/create_card',
-                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
-                headers={"Content-Type": "application/json"}
-              )
-              time.sleep(1)
-              logging.warning(f"Response status: {response.status_code}")
+              driver.get(url)
+
+              for _ in range(30):
+                ActionChains(driver).send_keys(Keys.SPACE).perform()
+                time.sleep(0.5)
+
+              time.sleep(3)
+              response = driver.page_source
+              soup = BS(response, 'html.parser')
+              downtrend = soup.find("span", {"class": "downtrend"})
+              if downtrend is None:
+                continue
+              discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
+              if int(last_price)*DELTA > int(discount_price):
+                logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
+                response = requests.post(
+                  'http://backend:8080/api/create_card',
+                  json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
+                  headers={"Content-Type": "application/json"}
+                )
+                time.sleep(1)
+                logging.warning(f"Response status: {response.status_code}")
 
             result.append({
               'category': cat_name,
@@ -232,8 +247,7 @@ def main_scraper():
 
     tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
-    # Использование ThreadPool
-    with ThreadPool(processes=5) as pool:  # Увеличьте количество потоков, если нужно
+    with ThreadPool(processes=5) as pool:
       pool.map(process_word, tasks)
 
   finally:

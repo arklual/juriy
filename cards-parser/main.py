@@ -74,7 +74,6 @@ def parse_card(card_id, url, last_price):
     driver = get_driver()
     driver.get(url)
 
-    # Прокрутка для загрузки всех элементов
     for _ in range(30):
       ActionChains(driver).send_keys(Keys.SPACE).perform()
       time.sleep(0.5)
