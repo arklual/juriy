@@ -102,7 +102,7 @@ def main_scraper():
     get_driver()
     
     for card in all_items:
-      parse_card(card['id'], card['url'], card['url'])
+      parse_card(card['id'], card['url'], card['price'])
       
   finally:
     close_driver()
