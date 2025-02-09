@@ -42,7 +42,17 @@ def create_card(request, create_card: CreateCard):
         "url": c.url,
         "image": c.image
     })
-    
+
+
+@router.delete('/delete_card/{card_id}', response={200: StatusOK, 404: Error})
+def delete_card(request, card_id: int):
+    try:
+        card = Card.objects.get(id=card_id)
+        card.delete()
+        return (201, {'status': 'ok'})
+    except Card.DoesNotExist:
+        return (201, {'status': 'ok'})
+
 @router.post('/add_favorite', response={201: StatusOK, 409: Error, 400: Error}, auth=AuthBearer())
 def add_favorite(request, addfavor: AddFavor):
     card = get_object_or_404(Card, id=addfavor.card_id)
