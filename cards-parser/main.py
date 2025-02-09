@@ -8,6 +8,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup as BS
 import time
+
+from tenacity import retry
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
@@ -51,11 +53,13 @@ def close_driver():
       logger.info("WebDriver closed.")
 
 def get_items():
-  response = requests.get("http://idealpick.ru:8080/api/get_cards?start=0&count=1000000&sort=recent")
-  if response.status_code == 200:
+  try:
+    response = requests.get("http://idealpick.ru:8080/api/get_cards?start=0&count=1000000&sort=recent", timeout=10)
+    response.raise_for_status()
     return response.json()
-  return []
-
+  except requests.exceptions.RequestException as e:
+    logger.error(f"Request failed: {e}")
+    return []
 
 
 def delete_card(id):
