@@ -147,7 +147,9 @@ const Category = (props) => {
         <div className='cards_wrapper'>
           {
               card_arr_state==="resolved" ?
-                card_arr_cache.map((elem, idx) => {
+                card_arr_cache.filter((elem, idx, arr) =>
+                  arr.findIndex(item => item.url === elem.url) === idx
+                ).map((elem, idx) => {
                   return <Card id={elem.id} name={elem.name} cost={elem.price} image={elem.image} link={elem.url} isFavoriteState={props.isFavoriteState}/>
                 })
               : null
