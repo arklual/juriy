@@ -165,12 +165,14 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
                 ActionChains(driver).send_keys(Keys.SPACE).perform()
                 time.sleep(0.5)
 
+              driver.implicitly_wait(5)
               time.sleep(3)
               response = driver.page_source
               soup = BS(response, 'html.parser')
               downtrend = soup.find("span", {"class": "downtrend"})
               if downtrend is None:
                 continue
+              discount_price = 0
               discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
               if int(discount_price)*(1/DELTA) > int(real_price):
                 logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
