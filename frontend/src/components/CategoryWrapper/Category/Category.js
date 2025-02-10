@@ -15,6 +15,10 @@ import { FilterContext } from "../../../context/FilterContext";
 import { ErrorContext } from '../../../context/ErrorContext';
 import { FilterConfContext } from '../../../context/FilterConfContext';
 
+const extractIdFromUrl = (url) => {
+  const match = url.match(/\/catalog\/(\d+)\//);
+  return match ? match[1] : null;
+};
 
 const Category = (props) => {
     const PORTION_OF_ITEMS = 20;
@@ -148,7 +152,7 @@ const Category = (props) => {
           {
               card_arr_state==="resolved" ?
                 card_arr_cache.filter((elem, idx, arr) =>
-                  arr.findIndex(item => item.url === elem.url) === idx
+                  arr.findIndex(item => extractIdFromUrl(item.url) === extractIdFromUrl(elem.url)) === idx
                 ).map((elem, idx) => {
                   return <Card id={elem.id} name={elem.name} cost={elem.price} image={elem.image} link={elem.url} isFavoriteState={props.isFavoriteState}/>
                 })
