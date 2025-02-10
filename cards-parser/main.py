@@ -86,7 +86,7 @@ def parse_card(card_id, url, last_price):
       delete_card(card_id)
       return
     discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
-    if int(discount_price)*(1/DELTA) > int(last_price):
+    if int(discount_price)*(1/DELTA) <= int(last_price):
       logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
       delete_card(card_id)
 
