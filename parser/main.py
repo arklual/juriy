@@ -172,7 +172,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
               if downtrend is None:
                 continue
               discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
-              if int(last_price)*DELTA > int(discount_price):
+              if int(discount_price)*(1/DELTA) > int(real_price):
                 logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
                 response = requests.post(
                   'http://backend:8080/api/create_card',
