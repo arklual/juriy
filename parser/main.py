@@ -1,5 +1,7 @@
 import datetime
 from multiprocessing.pool import ThreadPool
+from operator import truediv
+
 import psycopg2
 from pydantic import BaseModel
 import requests
@@ -109,6 +111,30 @@ def write_items(items):
   cur.close()
   conn.close()
 
+def parse_card(card_id, url, last_price):
+  try:
+    driver = get_driver()
+    driver.get(url)
+
+    for _ in range(30):
+      ActionChains(driver).send_keys(Keys.SPACE).perform()
+      time.sleep(0.5)
+
+    time.sleep(3)
+    response = driver.page_source
+    soup = BS(response, 'html.parser')
+    downtrend = soup.find("span", {"class": "downtrend"})
+    if downtrend is None:
+      return False
+    discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
+    if int(discount_price)*(1/DELTA) > int(last_price):
+      logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
+      return True
+    return False
+
+  except Exception as e:
+    logger.critical(f"General error: {e}", exc_info=True)
+
 def parse_cat_page(url, cat_name, all_items, cat_real_name):
   """Парсинг страницы категории."""
   try:
@@ -152,37 +178,24 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           if url in existing_items:
             db_item = existing_items[url]
             last_price = 0
+            card_id = 0
             if len(db_item) > 5:
+              card_id = db_item[0]
               last_price = db_item[5]
             else:
               logging.error(f"Invalid tuple length: {db_item}")
               continue
 
             if int(last_price) * (1 - DELTA) > int(real_price):
-              driver.get(url)
-
-              for _ in range(30):
-                ActionChains(driver).send_keys(Keys.SPACE).perform()
-                time.sleep(0.5)
-
-              driver.implicitly_wait(5)
-              time.sleep(3)
-              response = driver.page_source
-              soup = BS(response, 'html.parser')
-              downtrend = soup.find("span", {"class": "downtrend"})
-              if downtrend is None:
+              if not parse_card(card_id, url, last_price):
                 continue
-              discount_price = 0
-              discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
-              if int(discount_price)*(1/DELTA) > int(real_price):
-                logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
-                response = requests.post(
-                  'http://backend:8080/api/create_card',
-                  json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
-                  headers={"Content-Type": "application/json"}
-                )
-                time.sleep(1)
-                logging.warning(f"Response status: {response.status_code}")
+              response = requests.post(
+                'http://backend:8080/api/create_card',
+                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
+                headers={"Content-Type": "application/json"}
+              )
+              time.sleep(1)
+              logging.warning(f"Response status: {response.status_code}")
 
             result.append({
               'category': cat_name,
