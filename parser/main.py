@@ -69,6 +69,18 @@ def create_table():
             status VARCHAR(50) DEFAULT 'not added'
         )
     """)
+  cur.execute("""
+        CREATE TABLE IF NOT EXISTS middleware_items (
+            id SERIAL PRIMARY KEY,
+            category VARCHAR(255),
+            name VARCHAR(255),
+            url TEXT UNIQUE,
+            last_price INTEGER,
+            price INTEGER,
+            img_src TEXT,
+            status VARCHAR(50) DEFAULT 'not added'
+        )
+    """)
   conn.commit()
   cur.close()
   conn.close()
@@ -111,29 +123,22 @@ def write_items(items):
   cur.close()
   conn.close()
 
-def parse_card(card_id, url, last_price):
-  try:
-    driver = get_driver()
-    driver.get(url)
-
-    for _ in range(30):
-      ActionChains(driver).send_keys(Keys.SPACE).perform()
-      time.sleep(0.5)
-
-    time.sleep(3)
-    response = driver.page_source
-    soup = BS(response, 'html.parser')
-    downtrend = soup.find("span", {"class": "downtrend"})
-    if downtrend is None:
-      return False
-    discount_price = int(''.join(filter(str.isdigit, downtrend.text)))
-    if int(discount_price)*(1/DELTA) > int(last_price):
-      logging.warning(f"url: {url}, last_price: {last_price}, discount_price: {discount_price}")
-      return True
-    return False
-
-  except Exception as e:
-    logger.critical(f"General error: {e}", exc_info=True)
+def write_items_to_middleware(items):
+  """Запись товаров в базу данных."""
+  conn = get_db_connection()
+  cur = conn.cursor()
+  for item in items:
+    cur.execute("""
+            INSERT INTO middleware_items (category, name, url, last_price, price, img_src)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (url) DO UPDATE SET
+                last_price = EXCLUDED.last_price,
+                price = EXCLUDED.price,
+                img_src = EXCLUDED.img_src
+        """, (item['category'], item['name'], item['url'], item['last_price'], item['price'], item['img_src']))
+  conn.commit()
+  cur.close()
+  conn.close()
 
 def parse_cat_page(url, cat_name, all_items, cat_real_name):
   """Парсинг страницы категории."""
@@ -151,6 +156,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
     soup = BS(response, 'html.parser')
     cards = soup.find_all("div", {"class": "product-card__wrapper"})
     result = []
+    middleware_result = []
 
     existing_items = {}
     for item in all_items:
@@ -187,13 +193,14 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
               continue
 
             if int(last_price) * (1 - DELTA) > int(real_price):
-              if not parse_card(card_id, url, last_price):
-                continue
-              response = requests.post(
-                'http://backend:8080/api/create_card',
-                json={'name': name, 'price': str(real_price), 'img': image, 'target_url': url, 'category': cat_real_name, 'shutdown_time': (datetime.date.today() + datetime.timedelta(days=3)).strftime("%d-%m-%Y")},
-                headers={"Content-Type": "application/json"}
-              )
+              middleware_result.append({
+                'category': cat_name,
+                'name': name,
+                'url': url,
+                'last_price': last_price,
+                'price': real_price,
+                'img_src': image
+              })
               time.sleep(1)
               logging.warning(f"Response status: {response.status_code}")
 
@@ -219,7 +226,7 @@ def parse_cat_page(url, cat_name, all_items, cat_real_name):
           logger.error(f"Error processing card: {e}")
           continue
 
-    return result
+    return result, middleware_result
 
   except Exception as e:
     logger.critical(f"General error: {e}", exc_info=True)
@@ -234,15 +241,20 @@ def process_word(args):
   logger.warning(f"Processing {s} (page: {start_page}-{end_page})")
   encoded_s = urllib.parse.quote(s)
   parsed_items = []
+  parsed_middleware_items = []
   for i in range(start_page, end_page + 1):
-    items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={i}', s, all_items, s)
+    items, middleware_items = parse_cat_page(WB_BASE_LINK + f'?search={encoded_s}&sort=popular&page={i}', s, all_items, s)
     if items:
       logger.warning(f'page: {i} length: {len(items)}')
       parsed_items.extend(items)
     else:
       logger.error(f"No items found or error occurred for {s} on page {i}")
 
+    if middleware_items:
+      parsed_middleware_items.extend(middleware_items)
+
   write_items(parsed_items)
+  write_items_to_middleware(parsed_middleware_items)
 
 def main_scraper():
   """Основная функция парсера."""

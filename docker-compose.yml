@@ -37,6 +37,12 @@ services:
       - backend
     restart: always
 
+  middleware-parser:
+    build: ./middleware-parser
+    depends_on:
+      - backend
+    restart: always
+
   parser1:
     <<: *parser-template
     environment:
