@@ -274,7 +274,7 @@ def main_scraper():
 
     tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
 
-    with ThreadPool(processes=5) as pool:
+    with ThreadPool(processes=10) as pool:
       pool.map(process_word, tasks)
 
   finally:
