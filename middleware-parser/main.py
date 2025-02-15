@@ -136,8 +136,8 @@ def main_scraper():
   try:
     get_driver()
 
-    for card in all_items:
-      parse_card(card)
+    with ThreadPool(processes=3) as pool:
+      pool.map(parse_card, all_items)
 
   finally:
     close_driver()
