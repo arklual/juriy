@@ -1,179 +1,145 @@
-import './category.css';
+import { useState, useEffect, useCallback, useContext } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
+import './category.css';
 import Card from './Card/Card';
 import Topbar from './Topbar/Topbar';
-import Requests_API from '../../../logic/req';
 import Empty from '../../Empty/Empty';
+import Requests_API from '../../../logic/req';
 
-import { useContext, useState } from 'react';
-import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import usePromise from 'react-use-promise';
-import { useIntersectionObserver } from "@siberiacancode/reactuse";
-
-import { FilterContext } from "../../../context/FilterContext";
+import { FilterContext } from '../../../context/FilterContext';
 import { ErrorContext } from '../../../context/ErrorContext';
 import { FilterConfContext } from '../../../context/FilterConfContext';
 
+const PORTION_OF_ITEMS = 160;
+
+// Функция для извлечения ID товара из URL
 const extractIdFromUrl = (url) => {
   const match = url.match(/\/catalog\/(\d+)\//);
   return match ? match[1] : null;
 };
 
 const Category = (props) => {
-    const PORTION_OF_ITEMS = 20;
-    const [pos, setPos] = useState(0);
+  const [searchParams] = useSearchParams();
+  const [cards, setCards] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [pos, setPos] = useState(0);
 
-    const [searchParams, setSearchParams] = useSearchParams();
-    let search_param = searchParams.get("src");
-    let category_param = searchParams.get("cat");
-    useEffect(
-      () => {
-        search_param = searchParams.get("src");
-        category_param = searchParams.get("cat");
-      }
-    )
+  // Фильтры и ошибки
+  const [[FilterGetter], [filterConf, setFilterConf]] = [useContext(FilterContext), useContext(FilterConfContext)];
+  const [, ErrorDataSetter] = useContext(ErrorContext);
 
+  let search_param = searchParams.get("src");
+  let category_param = searchParams.get("cat");
+  let req_type = props.type;
 
-    let [req_type, set_req_type] = useState(props.type);
+  if (category_param) req_type = "Category";
+  else if (search_param) req_type = "Search";
 
-    if (category_param !== null && category_param !== ""){ req_type = "Category"}
-    else if (search_param !== null && search_param !== ""){ req_type = "Search"}
-
-    const [[FilterGetter, FilterSetter], [filterConf, setFilterConf]] = [useContext(FilterContext), useContext(FilterConfContext)];
-    const [ErrorDataGetter, ErrorDataSetter] = useContext(ErrorContext);
-
-    useEffect(() => {
-
-      if (req_type === "Search" || req_type === "New"){
-        setFilterConf({
-          canChangeCat: true,
-          extFiltration: true
-        })
-      }
-      else if (req_type === "Favorite" || req_type === "Category") {
-        setFilterConf({
-          canChangeCat: false,
-          extFiltration: true
-        })
-      }
-      else { // favorite
-        setFilterConf({
-          canChangeCat: false,
-          extFiltration: false
-        })
-      }
-    }, [])
-      
-    
-    const cards_array = (start = 0, count = 20) => {
-      let params_cache = FilterGetter;
-
-      params_cache.start = start;
-      params_cache.count = count;
-
-      if (req_type === "Category"){ params_cache.category = category_param; }
-      else if (req_type === "Search"){ params_cache.req = search_param; }
-
-      let config = {}
-
-      if (req_type === "Category" || req_type === "New"){
-        config = {
-          method: "GET",
-          sub_url: "get_cards",
-          params: params_cache
-        }
-      }
-      else if (req_type === "Search"){
-        config = {
-          method: "GET",
-          sub_url: "search",
-          params: params_cache
-        }
-      }
-      else { // favorite
-        config = {
-          method: "GET",
-          sub_url: "get_favorite",
-          params: params_cache,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization':'Bearer ' + String(localStorage.getItem("jwt"))
-          }
-        }
-      }
-      return Requests_API(
-        config
-      ).then((res)=>{
-        if (res.code === 200) {
-          return res
-        }
-        else {ErrorDataSetter({code: res.code, res: res, upd_time: Date.now(), descr: "Ошибка при загрузке карточек!"})}
-      })
+  // Установка конфигурации фильтров
+  useEffect(() => {
+    if (req_type === "Search" || req_type === "New") {
+      setFilterConf({ canChangeCat: true, extFiltration: true });
+    } else if (req_type === "Favorite" || req_type === "Category") {
+      setFilterConf({ canChangeCat: false, extFiltration: true });
+    } else {
+      setFilterConf({ canChangeCat: false, extFiltration: false });
     }
+  }, [req_type, setFilterConf]);
 
-    const [card_arr, card_err, card_arr_state] = usePromise(
-      () => cards_array(pos, PORTION_OF_ITEMS), [FilterGetter]
-    )
-    const [card_arr_cache, set_card_arr_cache] = useState([]);
-    useEffect(()=>{
-      if (card_arr_state === "resolved") {
-        set_card_arr_cache(card_arr.data);
-        setPos(pos+PORTION_OF_ITEMS);
-      }
-    }, [card_arr_state])
-    
-    const { ref } = useIntersectionObserver({
-      threshold: 1,
-      onChange: (entry) => {
-        if (entry.isIntersecting) {
-          setPos(pos+PORTION_OF_ITEMS)
-          cards_array(pos, PORTION_OF_ITEMS).then((res) =>{
-            set_card_arr_cache([...card_arr_cache, ...res.data])
-          })
-        };
-      },
+  // Функция загрузки товаров
+  const fetchCards = useCallback(async (start, count) => {
+    setIsLoading(true);
+    let params_cache = { ...FilterGetter, start, count };
+
+    if (req_type === "Category") params_cache.category = category_param;
+    else if (req_type === "Search") params_cache.req = search_param;
+
+    let config = {
+      method: "GET",
+      sub_url: req_type === "Search" ? "search" : "get_cards",
+      params: params_cache,
+    };
+
+    const res = await Requests_API(config);
+
+    if (res.code === 200) {
+      return res.data;
+    } else {
+      setHasMore(false);
+      ErrorDataSetter({ code: res.code, res, upd_time: Date.now(), descr: "Ошибка при загрузке карточек!" });
+      return [];
+    }
+  }, [req_type, FilterGetter, search_param, category_param, ErrorDataSetter]);
+
+  // Функция загрузки при скролле
+  const loadMoreItems = async () => {
+    if (isLoading || !hasMore) return;
+    const newCards = await fetchCards(pos, PORTION_OF_ITEMS);
+
+    setCards(prev => {
+      // Фильтрация дубликатов
+      const uniqueCards = newCards.filter(newItem =>
+        !prev.some(existingItem => extractIdFromUrl(existingItem.url) === extractIdFromUrl(newItem.url))
+      );
+      return [...prev, ...uniqueCards];
     });
 
+    setPos(prev => prev + PORTION_OF_ITEMS);
+    if (newCards.length < PORTION_OF_ITEMS) setHasMore(false);
+    setIsLoading(false);
+  };
 
-    return (
-      <div className='category_wrapper'>
-        
-        <Topbar
-          search_mode={req_type==="Search"}
-          cat_name={category_param == null ? props.cat_name : category_param}
-          canSubscribe={(props.canSubscribe || req_type==="Category")}
-          canFilter={props.canFilter}
-        />
-        {
-          (card_arr_state==="resolved" && card_arr_cache.length === 0) ? <Empty/>: null
-        }
-        <div className='cards_wrapper'>
-          {
-              card_arr_state==="resolved" ?
-                card_arr_cache.filter((elem, idx, arr) =>
-                  arr.findIndex(item => extractIdFromUrl(item.url) === extractIdFromUrl(elem.url)) === idx
-                ).map((elem, idx) => {
-                  return <Card id={elem.id} name={elem.name} cost={elem.price} image={elem.image} link={elem.url} isFavoriteState={props.isFavoriteState}/>
-                })
-              : null
-          }
-          {
-            (card_arr_state==="resolved" && card_arr_cache.length !== 0) ? <div ref={ref}></div>: null
-          }
+  // Первичная загрузка
+  useEffect(() => {
+    loadMoreItems();
+  }, []);
+
+  return (
+    <div className="category_wrapper">
+      <Topbar
+        search_mode={req_type === "Search"}
+        cat_name={category_param ?? props.cat_name}
+        canSubscribe={props.canSubscribe || req_type === "Category"}
+        canFilter={props.canFilter}
+      />
+
+      {cards.length === 0 && !isLoading && <Empty />}
+
+      <InfiniteScroll
+        dataLength={cards.length}
+        next={loadMoreItems}
+        hasMore={hasMore}
+        loader={<div className="loading">Загрузка...</div>}
+        endMessage={<p style={{ textAlign: 'center' }}>Больше товаров нет</p>}
+      >
+        <div className="cards_wrapper">
+          {cards.map((elem) => (
+            <Card
+              key={elem.id}
+              id={elem.id}
+              name={elem.name}
+              cost={elem.price}
+              image={elem.image}
+              link={elem.url}
+              isFavoriteState={props.isFavoriteState}
+            />
+          ))}
         </div>
-      </div>
-    )
-}
-// <a href="https://www.flaticon.com/free-icons/filter" title="filter icons">Filter icons created by joalfa - Flaticon</a>
-// <a target="_blank" href="https://icons8.com/icon/24717/add">add button</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+      </InfiniteScroll>
+    </div>
+  );
+};
+
 Category.defaultProps = {
-    cat_name: "Новинки",
-    isFavoriteState: false,
-    canSubscribe: true,
-    canFilter: true,
-    search_mode: false,
-    type: "New"
-}
+  cat_name: "Новинки",
+  isFavoriteState: false,
+  canSubscribe: true,
+  canFilter: true,
+  search_mode: false,
+  type: "New",
+};
 
 export default Category;
