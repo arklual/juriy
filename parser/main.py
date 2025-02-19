@@ -276,7 +276,8 @@ def main_scraper():
 
     for word in selected_words:
       for page in range(1, 4):
-        process_word(word, page, all_items)
+        args = (word, page, all_items)
+        process_word(args)
 
   finally:
     close_driver()
