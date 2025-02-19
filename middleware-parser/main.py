@@ -1,4 +1,5 @@
 import datetime
+import os
 from multiprocessing.pool import ThreadPool
 import psycopg2
 from pydantic import BaseModel
@@ -133,10 +134,15 @@ def main_scraper():
   """Основная функция парсера."""
   all_items = get_items()
 
+  block_size = len(all_items) // 5
+  cnt = int(os.environ.get('CNT', 1))
+  start_index = (cnt - 1) * block_size
+  end_index = start_index + block_size
+
   try:
     get_driver()
 
-    for card in all_items:
+    for card in all_items[start_index:end_index]:
       parse_card(card)
 
   finally:

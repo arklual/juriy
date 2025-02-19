@@ -1,4 +1,5 @@
 import datetime
+import os
 from multiprocessing.pool import ThreadPool
 from operator import truediv
 
@@ -265,20 +266,20 @@ def main_scraper():
     get_driver()
 
     df = pd.read_excel("table.xlsx", header=None)
-    words = []
-    for item in df[0].astype(str):
-      cleaned_item = re.sub(r'^\d+', '', item)
-      words.extend(cleaned_item.split(','))
+    words = df.iloc[:, 0].tolist()[1:]
+    words = [str(word).strip() for word in words if str(word).strip()]
+    block_size = len(words) // 10
+    cnt = int(os.environ.get('CNT', 1))
+    start_index = (cnt - 1) * block_size
+    end_index = start_index + block_size
+    selected_words = words[start_index:end_index]
 
-    words = [word.strip() for word in words if word.strip()]
-
-    tasks = [(s, cnt, all_items) for s in words for cnt in range(1, 3)]
-
-    with ThreadPool(processes=10) as pool:
-      pool.map(process_word, tasks)
+    for word in selected_words:
+      for page in range(1, 4):
+        process_word(word, page, all_items)
 
   finally:
-    close_driver()  # Гарантированное закрытие драйвера
+    close_driver()
 
 if __name__ == "__main__":
   main_scraper()

@@ -6,6 +6,12 @@ x-parser-template: &parser-template
     - backend
   restart: always
 
+x-middleware-parser-template: &middleware-parser-template
+  build: ./middleware-parser
+  depends_on:
+    - backend
+  restart: always
+
 services:
   pgdb:
     image: postgres
@@ -37,16 +43,80 @@ services:
       - backend
     restart: always
 
-  middleware-parser:
-    build: ./middleware-parser
-    depends_on:
-      - backend
-    restart: always
-
   parser1:
     <<: *parser-template
     environment:
       - CNT=1
+
+  parser2:
+    <<: *parser-template
+    environment:
+      - CNT=2
+
+  parser3:
+    <<: *parser-template
+    environment:
+      - CNT=3
+
+  parser4:
+    <<: *parser-template
+    environment:
+      - CNT=4
+
+  parser5:
+    <<: *parser-template
+    environment:
+      - CNT=5
+
+  parser6:
+    <<: *parser-template
+    environment:
+      - CNT=6
+
+  parser7:
+    <<: *parser-template
+    environment:
+      - CNT=7
+
+  parser8:
+    <<: *parser-template
+    environment:
+      - CNT=8
+
+  parser9:
+    <<: *parser-template
+    environment:
+      - CNT=9
+
+  parser10:
+    <<: *parser-template
+    environment:
+      - CNT=10
+
+  middleware-parser1:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=1
+
+  middleware-parser2:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=2
+
+  middleware-parser3:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=3
+
+  middleware-parser4:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=4
+
+  middleware-parser5:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=5
 
 volumes:
   pgdbdata:
