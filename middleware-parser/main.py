@@ -134,7 +134,7 @@ def main_scraper():
   """Основная функция парсера."""
   all_items = get_items()
 
-  block_size = len(all_items) // 10
+  block_size = len(all_items) // 15
   cnt = int(os.environ.get('CNT', 1))
   start_index = (cnt - 1) * block_size
   end_index = start_index + block_size
