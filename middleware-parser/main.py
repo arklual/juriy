@@ -124,7 +124,7 @@ def parse_card(card):
       time.sleep(1)
       logging.warning(f"Response status: {response.status_code}")
 
-    delete_item(card[0])
+
 
   except Exception as e:
     logger.critical(f"General error: {e}", exc_info=True)
@@ -145,6 +145,7 @@ def main_scraper():
 
     for card in all_items:
       parse_card(card)
+      delete_item(card[0])
 
   finally:
     close_driver()
