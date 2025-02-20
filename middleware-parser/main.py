@@ -134,15 +134,16 @@ def main_scraper():
   """Основная функция парсера."""
   all_items = get_items()
 
-  block_size = len(all_items) // 5
+  block_size = len(all_items) // 10
   cnt = int(os.environ.get('CNT', 1))
   start_index = (cnt - 1) * block_size
   end_index = start_index + block_size
+  all_items = all_items[start_index:end_index]
 
   try:
     get_driver()
 
-    for card in all_items[start_index:end_index]:
+    for card in all_items:
       parse_card(card)
 
   finally:

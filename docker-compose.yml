@@ -118,6 +118,31 @@ services:
     environment:
       - CNT=5
 
+  middleware-parser6:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=6
+
+  middleware-parser7:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=7
+
+  middleware-parser8:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=8
+
+  middleware-parser9:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=9
+
+  middleware-parser10:
+    <<: *middleware-parser-template
+    environment:
+      - CNT=10
+
 volumes:
   pgdbdata:
 
