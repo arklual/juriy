@@ -1,5 +1,4 @@
 import './header.css';
-import logo from './logo.svg';
 import favorite from './favorite.svg';
 import profile from './profile.svg';
 import cross from "./close.png"
@@ -17,6 +16,7 @@ import useLocalStorage from 'use-local-storage';
 import { useMemo } from 'react';
 import { useRef } from 'react';
 import debounce from 'lodash/debounce';
+import logo from './logo.jpg';
 
 import { ErrorContext } from '../../context/ErrorContext';
 

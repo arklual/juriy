@@ -5,7 +5,7 @@
     z-index: 100;
     background-color: rgba(0,0,0,0.4);
 
-    position: absolute;
+    position: fixed;
     top: calc(min(90px, 9vh));
     left: 0;
 
@@ -17,7 +17,7 @@
     width: auto;
     min-width: 20vw;
 
-    position: absolute;
+    position: fixed;
     top: calc(min(90px, 9vh));
     left: 0;
 
@@ -95,7 +95,7 @@
 }
 
 
-.hidden_side_menu { left: calc(-20vw - 5vw); }
+.hidden_side_menu { left: -100%; }
 .nonhidden_side_menu { left: 0; }
 .side_menu * { z-index: inherit; }
 

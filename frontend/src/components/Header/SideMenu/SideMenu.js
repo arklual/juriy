@@ -68,16 +68,21 @@ const SideMenu = (props) => {
                     <p>Категории</p>
                     {/*<img src={add} onClick={() => {AddCatMenuSetter(!AddCatMenuGetter)}} className="side_menu_category_big_img"></img>*/}
                 </li>
-                
-                {
-                    cat_arr_state==="resolved" ? cat_arr.data.map((elem, idx) =>
-                        <a href={"/?cat="+elem.title}>
-                            <li className='side_menu_subcategory' key={idx} onClick={() => {activeBurgerMenu(!burgerMenu)}}>
-                                <p>{elem.title}</p>
-                            </li>
-                        </a>
-                    ) : null
-                }
+                <div style={{
+                    overflowY: "scroll",
+                    height: "100%",
+                }}>
+                    {
+                        cat_arr_state==="resolved" ? cat_arr.data.filter(s => !/^\d+$/.test(s.title)).map((elem, idx) =>
+                          <a href={"/?cat="+elem.title}>
+                              <li className='side_menu_subcategory' key={idx} onClick={() => {activeBurgerMenu(!burgerMenu)}}>
+                                  <p>{elem.title}</p>
+                              </li>
+                          </a>
+                        ) : null
+                    }
+                </div>
+
             </div>
 
             </>
