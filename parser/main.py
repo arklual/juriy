@@ -268,7 +268,7 @@ def main_scraper():
     df = pd.read_excel("table.xlsx", header=None)
     words = df.iloc[:, 0].tolist()[1:]
     words = [str(word).strip() for word in words if str(word).strip()]
-    block_size = len(words) // 20
+    block_size = len(words) // 10
     cnt = int(os.environ.get('CNT', 1))
     start_index = (cnt - 1) * block_size
     end_index = start_index + block_size
