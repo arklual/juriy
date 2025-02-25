@@ -93,56 +93,6 @@ services:
     environment:
       - CNT=10
 
-  parser11:
-    <<: *parser-template
-    environment:
-      - CNT=11
-
-  parser12:
-    <<: *parser-template
-    environment:
-      - CNT=12
-
-  parser13:
-    <<: *parser-template
-    environment:
-      - CNT=13
-
-  parser14:
-    <<: *parser-template
-    environment:
-      - CNT=14
-
-  parser15:
-    <<: *parser-template
-    environment:
-      - CNT=15
-
-  parser16:
-    <<: *parser-template
-    environment:
-      - CNT=16
-
-  parser17:
-    <<: *parser-template
-    environment:
-      - CNT=17
-
-  parser18:
-    <<: *parser-template
-    environment:
-      - CNT=18
-
-  parser19:
-    <<: *parser-template
-    environment:
-      - CNT=19
-
-  parser20:
-    <<: *parser-template
-    environment:
-      - CNT=20
-
   middleware-parser1:
     <<: *middleware-parser-template
     environment:
@@ -192,31 +142,6 @@ services:
     <<: *middleware-parser-template
     environment:
       - CNT=10
-
-  middleware-parser11:
-    <<: *middleware-parser-template
-    environment:
-      - CNT=11
-
-  middleware-parser12:
-    <<: *middleware-parser-template
-    environment:
-      - CNT=12
-
-  middleware-parser13:
-    <<: *middleware-parser-template
-    environment:
-      - CNT=13
-
-  middleware-parser14:
-    <<: *middleware-parser-template
-    environment:
-      - CNT=14
-
-  middleware-parser15:
-    <<: *middleware-parser-template
-    environment:
-      - CNT=15
 
 volumes:
   pgdbdata:
