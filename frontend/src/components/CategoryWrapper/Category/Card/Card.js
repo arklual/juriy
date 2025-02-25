@@ -90,7 +90,7 @@ const Card = (props) => {
           <p className='card_name'>{props.name}</p>
         </div>
 
-        <a href={props.link}>
+        <a href={props.link} target="_blank" rel="noopener noreferrer">
           <button className='buy_card_btn'>
             <img src={cart} alt="cart_img" />
             <p>Купить</p>
