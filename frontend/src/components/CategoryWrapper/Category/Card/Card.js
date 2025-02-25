@@ -112,7 +112,7 @@ const Card = (props) => {
               <span className="modal-old-price">{oldPrice} ₽</span>
               </p>
               <p className="modal-category">{props.category}</p>
-              <a href={props.link}>
+              <a href={props.link} target="_blank" rel="noopener noreferrer">
                 <button className='buy_card_btn'>
                   <img src={cart} alt="cart_img" />
                   <p>Купить</p>
