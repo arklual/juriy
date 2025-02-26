@@ -2,9 +2,9 @@
 
 import axios from 'axios';
 
-const baseUrl = "http://176.99.7.221:8080/api/";
+const baseUrl = "http://idealpick.ru:8080/api/";
 
-const Requests_API = async ({method = "GET", sub_url = "", params = {}, body = {}, headers = {}, timeout = 3000}) => {
+const Requests_API = async ({method = "GET", sub_url = "", params = {}, body = {}, headers = {}, timeout = 100000}) => {
   let raw_config = {
     baseURL: baseUrl + sub_url,
     method: method,
@@ -14,7 +14,7 @@ const Requests_API = async ({method = "GET", sub_url = "", params = {}, body = {
   }
 
   if (method === "POST" || method === "PUT" || method === "DELETE"){ raw_config['data'] = body; }
-  
+
   return axios(raw_config).then((res) => {
     return {
       type: "ok",
