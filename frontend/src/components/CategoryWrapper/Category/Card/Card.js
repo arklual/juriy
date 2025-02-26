@@ -126,14 +126,4 @@ const Card = (props) => {
   );
 };
 
-Card.defaultProps = {
-  id: 1,
-  name: "MARRAKECH ROYAL SPA",
-  cost: 557,
-  image: product,
-  isFavoriteState: false,
-  link: "#",
-  category: "Категория товара" // Добавили свойство категории
-};
-
 export default Card;

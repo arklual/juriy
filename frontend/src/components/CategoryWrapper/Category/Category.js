@@ -207,7 +207,7 @@ const Category = (props) => {
     <div className="category_wrapper">
       <Topbar
         search_mode={req_type === "Search"}
-        cat_name={category_param ?? props.cat_name}
+        cat_name={category_param ?? props.cat_name ?? "Новинки"}
         canSubscribe={props.canSubscribe || req_type === "Category"}
         canFilter={props.canFilter}
       />
@@ -217,7 +217,8 @@ const Category = (props) => {
       {isLoading && <div className="loading">Загрузка...</div>}
 
       <div className="cards_wrapper">
-        {cards.map((elem) => (
+        {cards ?
+          cards.map((elem) => (
           <Card
             key={elem.id}
             id={elem.id}
@@ -228,7 +229,10 @@ const Category = (props) => {
             link={elem.url}
             isFavoriteState={props.isFavoriteState}
           />
-        ))}
+        ))
+        :
+        <p>Нет товаров</p>
+        }
       </div>
 
       <div className="pagination" style={{ textAlign: "center", marginTop: "20px" }}>
@@ -238,15 +242,6 @@ const Category = (props) => {
       </div>
     </div>
   );
-};
-
-Category.defaultProps = {
-  cat_name: "Новинки",
-  isFavoriteState: false,
-  canSubscribe: true,
-  canFilter: true,
-  search_mode: false,
-  type: "New"
 };
 
 export default Category;

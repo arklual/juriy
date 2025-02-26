@@ -30,13 +30,4 @@ const CategoryWrapper = (props) => {
     )
 }
 
-CategoryWrapper.defaultProps = {
-    cat_name: "Новинки",
-    isFavoriteState: false,
-    canSubscribe: true,
-    createButton: true,
-    canFilter: true,
-    type: "New"
-}
-
 export default CategoryWrapper;

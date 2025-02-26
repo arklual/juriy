@@ -4,7 +4,7 @@ import add from "./add.svg"
 import Requests_API from '../../../logic/req';
 
 import usePromise from 'react-use-promise';
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import {useContext} from "react";
 import { Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
@@ -23,6 +23,9 @@ const SideMenu = (props) => {
 
     const [ErrorDataGetter, ErrorDataSetter] = useContext(ErrorContext);
 
+    const [cat_arr, setCatArr] = useState(null)
+    const [cat_err, setCatErr] = useState(null)
+
     const get_cat_arr = () => {
         return Requests_API(
             {
@@ -34,9 +37,17 @@ const SideMenu = (props) => {
             else { return ErrorDataSetter({code: res.code, res: res, upd_time: Date.now(), descr: "Ошибка при получении списка категорий!"}); }
         })
     }
-    const [cat_arr, cat_err, cat_arr_state] = usePromise(
-        () => get_cat_arr(), []
-    );
+
+    useEffect(() => {
+        get_cat_arr()
+          .then((res) => {
+              setCatArr(res.data)
+          })
+          .catch((err) => {
+              setCatErr(err)
+          })
+    }, [])
+
 
     return (
         <>
@@ -73,8 +84,8 @@ const SideMenu = (props) => {
                     height: "100%",
                 }}>
                     {
-                        cat_arr_state==="resolved" ? cat_arr.data.filter(s => !/^\d+$/.test(s.title)).map((elem, idx) =>
-                          <a href={"/?cat="+elem.title}>
+                        cat_arr ? cat_arr.filter(s => !/^\d+$/.test(s.title)).map((elem, idx) =>
+                          <a key={idx} href={"/?cat="+elem.title}>
                               <li className='side_menu_subcategory' key={idx} onClick={() => {activeBurgerMenu(!burgerMenu)}}>
                                   <p>{elem.title}</p>
                               </li>
