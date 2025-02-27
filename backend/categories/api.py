@@ -16,7 +16,7 @@ router = Router()
 @router.get("/categories", response=List[CategorySchema])
 def get_categories(request):
     categories = Category.objects.all()
-    filtered_categories = [s for s in categories if not s.isnumeric()][:40]
+    filtered_categories = [s for s in categories if not s.title.isnumeric()][:40]
     return (200, filtered_categories)
 
 @router.get('/get_followed_categories', response = {200: List[CategorySchema], 400: Error, 409: Error}, auth=AuthBearer())
