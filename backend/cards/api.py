@@ -134,7 +134,7 @@ def get_favorite(request, start:int, count:int, sort:str):
     return (200, cards)
 
 @router.get('/get_cards', response={200: List[CardSchema], 409: Error, 400: Error})
-def get_cards(request, start:int, count:int, sort:str, 
+def get_cards(request, start:int, count:int, sort:str,
               time_start: Optional[str] = None, time_finish: Optional[str] = None, 
               price_floor: Optional[int] = None, price_top: Optional[int] = None,
               category: Optional[str] = None):

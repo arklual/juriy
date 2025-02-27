@@ -15,7 +15,7 @@ router = Router()
 # Create your views here.
 @router.get("/categories", response=List[CategorySchema])
 def get_categories(request):
-    categories = Category.objects.all()
+    categories = Category.objects.all()[:30]
     return (200, categories) 
 
 @router.get('/get_followed_categories', response = {200: List[CategorySchema], 400: Error, 409: Error}, auth=AuthBearer())

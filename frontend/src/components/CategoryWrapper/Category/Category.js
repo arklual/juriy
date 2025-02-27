@@ -11,7 +11,7 @@ import { FilterContext } from '../../../context/FilterContext';
 import { ErrorContext } from '../../../context/ErrorContext';
 import { FilterConfContext } from '../../../context/FilterConfContext';
 
-const PORTION_OF_ITEMS = 18; // Количество товаров на одной странице
+const PORTION_OF_ITEMS = 42; // Количество товаров на одной странице
 
 // Функция для извлечения ID товара из URL (если нужна фильтрация дубликатов)
 const extractIdFromUrl = (url) => {
