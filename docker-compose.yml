@@ -13,6 +13,18 @@ x-middleware-parser-template: &middleware-parser-template
   restart: always
 
 services:
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    volumes:
+      - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./userlist.txt:/etc/pgbouncer/userlist.txt
+    ports:
+      - "6432:6432"
+    depends_on:
+      - pgdb
+    networks:
+      - your-network
+
   pgdb:
     image: postgres
     environment:

@@ -13,6 +13,14 @@ import { FilterConfContext } from '../../../context/FilterConfContext';
 
 const PORTION_OF_ITEMS = 42; // Количество товаров на одной странице
 
+const reqTypeURl = {
+  "Search": "search",
+  "New": "get_cards",
+  "Category": "get_cards",
+  "": "get_cards",
+  "Favorite": "get_favorite",
+}
+
 // Функция для извлечения ID товара из URL (если нужна фильтрация дубликатов)
 const extractIdFromUrl = (url) => {
   const match = url.match(/\/catalog\/(\d+)\//);
@@ -63,8 +71,12 @@ const Category = (props) => {
 
       let config = {
         method: "GET",
-        sub_url: req_type === "Search" ? "search" : "get_cards",
+        sub_url: req_type === undefined ? "get_cards" : reqTypeURl[req_type],
         params: params_cache,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + String(localStorage.getItem("jwt"))
+        },
       };
 
       const res = await Requests_API(config);
