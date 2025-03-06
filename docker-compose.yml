@@ -17,11 +17,17 @@ services:
       - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
       - ./userlist.txt:/etc/pgbouncer/userlist.txt
     ports:
-      - "6432:6432"
+      - "6433:6432"
     depends_on:
       - pgdb
     networks:
       - default
+    environment:
+      - DATABASES_HOST=pgdb
+      - DATABASES_PORT=5432
+      - DATABASES_USER=postgres
+      - DATABASES_PASSWORD=postgres
+      - DATABASES_NAME=postgres
 
   pgdb:
     image: postgres
