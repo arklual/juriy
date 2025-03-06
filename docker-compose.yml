@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-parser-template: &parser-template
   build: ./parser
   depends_on:
@@ -23,7 +21,7 @@ services:
     depends_on:
       - pgdb
     networks:
-      - your-network
+      - default
 
   pgdb:
     image: postgres
