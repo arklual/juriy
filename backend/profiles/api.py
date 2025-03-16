@@ -9,19 +9,34 @@ import jwt
 import os
 import random
 from .models import Profile
-from .schemas import Token, UserSignin, UserProfile, Error, StatusOK, UserConfirm
+from .schemas import Token, UserSignin, UserProfile, Error, StatusOK, UserConfirm, PasswordResetRequest, PasswordReset
 from web2_backend.settings import SECRET_KEY
 from django.core.mail import send_mail
 
 router = Router()
 
+def send_verification_code(email, code):
+    send_mail(
+        "Код подтверждения",
+        f"Ваш код подтверждения: {code}",
+        'admin@ideal-pick.ru',
+        [email],
+        fail_silently=False,
+    )
+
 @router.post('/register', response={201: UserProfile, 409: Error, 400: Error})
 def signup(request, user: UserSignin):
-    account = Profile.objects.create_user(email=user.login, password=user.password)
-    account.save()
-    return 201, {
-        "login": account.email
-    }
+    try:
+        account = Profile.objects.create_user(email=user.login, password=user.password)
+        # Генерируем и отправляем код подтверждения
+        account.verf_code = str(random.randint(100000, 999999))
+        account.save()
+        send_verification_code(account.email, account.verf_code)
+        return 201, {
+            "login": account.email
+        }
+    except IntegrityError:
+        return 409, {"details": "email already exists"}
 
 @router.post('/send_code_to_email', response={201: UserProfile, 409: Error, 400: Error,403: Error, 404: Error})
 def send_code(request, user: UserSignin):
@@ -30,18 +45,12 @@ def send_code(request, user: UserSignin):
         if not account.is_verf:
             account.verf_code = str(random.randint(100000, 999999))
             account.save()
-            send_mail(
-                "Code",
-                str(account.verf_code),
-                'admin@ideal-pick.ru',
-                [account.email],
-                fail_silently=False,
-            )
+            send_verification_code(account.email, account.verf_code)
             return 201, {
                 "login": account.email
             }
         else:
-            return 403, {"details": "already verif"}
+            return 403, {"details": "already verified"}
     else:
         return 404, {"details": "user not found"}
 
@@ -68,6 +77,37 @@ def signin(request, user: UserSignin):
             encoded_jwt = jwt.encode({"createdAt": datetime.utcnow().timestamp(), "user_id": account.id}, SECRET_KEY, algorithm="HS256")
             return 200, {"token": encoded_jwt}
         else:
-            return 403, {"details": "not verif"}
+            return 403, {"details": "not verified"}
     else:
+        return 404, {"details": "user not found"}
+
+@router.post('/reset-password-request', response={200: StatusOK, 404: Error})
+def reset_password_request(request, data: PasswordResetRequest):
+    try:
+        account = Profile.objects.get(email=data.login)
+        account.verf_code = str(random.randint(100000, 999999))
+        account.save()
+        send_mail(
+            "Восстановление пароля",
+            f"Ваш код для восстановления пароля: {account.verf_code}",
+            'admin@ideal-pick.ru',
+            [account.email],
+            fail_silently=False,
+        )
+        return 200, {'status': 'OK'}
+    except Profile.DoesNotExist:
+        return 404, {"details": "user not found"}
+
+@router.post('/reset-password', response={200: StatusOK, 404: Error, 403: Error})
+def reset_password(request, data: PasswordReset):
+    try:
+        account = Profile.objects.get(email=data.login)
+        if str(account.verf_code) == str(data.code):
+            account.set_password(data.new_password)
+            account.verf_code = ''  # Очищаем код после использования
+            account.save()
+            return 200, {'status': 'OK'}
+        else:
+            return 403, {"details": "code is wrong"}
+    except Profile.DoesNotExist:
         return 404, {"details": "user not found"}

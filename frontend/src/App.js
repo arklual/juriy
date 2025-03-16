@@ -11,6 +11,9 @@ import Admin from './components/Admin/Admin';
 import Favorite from './components/Favorite/Favorite';
 import Error from './components/Error/Error';
 import CategoryWrapper from './components/CategoryWrapper/CategoryWrapper';
+import PasswordReset from './components/PasswordReset/PasswordReset';
+import VKCallback from './components/SocialAuth/VKCallback';
+import TelegramCallback from './components/SocialAuth/TelegramCallback';
 
 import { Link } from 'react-router-dom';
 
@@ -75,10 +78,15 @@ const App = () => {
             <Route path="/sign-in" element={
                 <Login/>
             }/>
+            <Route path="/reset-password" element={
+                <PasswordReset/>
+            }/>
 
             <Route path="/admin" element={
                 <Admin/> 
             }/>
+            <Route path="/auth/vk/callback" element={<VKCallback />} />
+            <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
           </Routes>
           
           <Error visible_time={3} reset={() => this.forceUpdate()}/>

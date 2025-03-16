@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const baseUrl = "http://idealpick.ru:8080/api/";
+const baseUrl = "http://localhost:8080/api/";
 
 const Requests_API = async ({method = "GET", sub_url = "", params = {}, body = {}, headers = {}, timeout = 100000}) => {
   let raw_config = {

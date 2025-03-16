@@ -60,6 +60,18 @@
             align-items: center;
             gap: 10px;
         }
+            .content_container form {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .input-group {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
             .content_container input {
                 width: 100%;
                 height: 40px;
@@ -99,6 +111,15 @@
                     border-color: #a73afd;
                     box-shadow: inset 1px 0 0 #a73afd,inset 0 1px 0 #a73afd,inset -1px 0 0 #a73afd,inset 0 -1px 0 #a73afd;
                 }
+                .content_container input.error {
+                    border-color: #ff3e3e;
+                    box-shadow: inset 1px 0 0 #ff3e3e,inset 0 1px 0 #ff3e3e,inset -1px 0 0 #ff3e3e,inset 0 -1px 0 #ff3e3e;
+                }
+                .error-message {
+                    color: #ff3e3e;
+                    font-size: 14px;
+                    margin-top: -5px;
+                }
                 .reg_code {
                     display: flex;
                     flex-direction: row;
@@ -128,9 +149,16 @@
                 color: white;
 
                 padding: 5px;
+                cursor: pointer;
+                transition: all .3s ease;
             }
-                .decor_btn:hover {
+                .decor_btn:hover:not(:disabled) {
                     opacity: 1;
+                    transform: translateY(-1px);
+                }
+                .decor_btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
                 }
             .submit_btn {
                 height: 40px;
@@ -148,6 +176,7 @@
             align-items: center;
 
             width: 100%;
+            margin-top: 5px;
         }
             .other_way hr {
                 display: none;
@@ -158,8 +187,16 @@
                 
                 margin: 0;
             }
+            .other_way p {
+                color: #585858;
+            }
             .other_way p a {
                 margin-left: 10px;
                 color: #001aff;
-                text-decoration: 2px solid #001aff;
+                text-decoration: none;
+                font-weight: 500;
+                transition: all .3s ease;
             }
+                .other_way p a:hover {
+                    text-decoration: underline;
+                }

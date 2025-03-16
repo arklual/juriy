@@ -1,0 +1,92 @@
+.social-auth {
+    width: 100%;
+    margin: 20px 0;
+}
+
+.social-auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.social-auth-divider::before,
+.social-auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.social-auth-divider span {
+    padding: 0 10px;
+    color: #666;
+    font-size: 14px;
+}
+
+.social-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.social-button {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.social-button svg {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+.social-button span {
+    white-space: nowrap;
+}
+
+/* Стили для кнопки ВКонтакте */
+.vk-button {
+    background-color: #0077ff;
+    color: white;
+}
+
+.vk-button:hover {
+    background-color: #0066cc;
+}
+
+.vk-icon {
+    fill: white;
+}
+
+/* Стили для кнопки Telegram */
+.telegram-button {
+    background-color: #27a7e7;
+    color: white;
+}
+
+.telegram-button:hover {
+    background-color: #229ad3;
+}
+
+.telegram-icon {
+    fill: white;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .social-buttons {
+        flex-direction: column;
+    }
+
+    .social-button {
+        width: 100%;
+        justify-content: center;
+    }
+} 

@@ -6,6 +6,13 @@
     flex-direction: column;
     
     min-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
     .hide_btn {
         display: none !important;
@@ -18,10 +25,13 @@
         grid-template-columns: repeat(2,calc(100%/2 - 8px/2*(2 - 1)));
         row-gap: 24px;
         column-gap: 8px;
-
-        max-width: 1500px;
         width: 100%;
-
+        max-width: 1500px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px;
+        box-sizing: border-box;
     }
     @media (min-width: 768px) {
         .cards_wrapper {
@@ -33,6 +43,13 @@
         .cards_wrapper {
           grid-template-columns: repeat(6,calc(100%/6 - 30px/6*(6 - 1)));
           column-gap: 30px;
+        }
+    }
+    @media (max-width: 768px) {
+        .banner-size-2,
+        .banner-size-4 {
+          grid-column: 1 / -1;
+          aspect-ratio: 16/9;
         }
     }
     .more_cards_wrapper {
@@ -85,4 +102,41 @@
             justify-content: center;
             align-items: center;
         }
+
+/* Стили для баннеров разных размеров */
+.banner-size-1 {
+  grid-column: span 1;
+  aspect-ratio: 1;
+}
+
+.banner-size-2 {
+  grid-column: span 2;
+  aspect-ratio: 2/1;
+}
+
+.banner-size-4 {
+  grid-column: span 2;
+  grid-row: span 2;
+  aspect-ratio: 1;
+}
+
+.loading {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: #666;
+}
+
+.pagination {
+  margin-top: 20px;
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
             

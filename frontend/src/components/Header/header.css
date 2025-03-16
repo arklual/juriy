@@ -58,7 +58,7 @@ header *:any-link{
             width: 100%;
         }
     }
-        @media (max-width: 1200px) {
+        @media (max-width: 1500px) {
             .headr_logo {
                 width: 172px;
                 height: auto;

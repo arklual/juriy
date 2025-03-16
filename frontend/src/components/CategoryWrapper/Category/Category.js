@@ -5,6 +5,8 @@ import './category.css';
 import Card from './Card/Card';
 import Topbar from './Topbar/Topbar';
 import Empty from '../../Empty/Empty';
+import TopBanner from '../../Banner/TopBanner';
+import GridBanner from '../../Banner/GridBanner';
 import Requests_API from '../../../logic/req';
 
 import { FilterContext } from '../../../context/FilterContext';
@@ -25,6 +27,31 @@ const reqTypeURl = {
 const extractIdFromUrl = (url) => {
   const match = url.match(/\/catalog\/(\d+)\//);
   return match ? match[1] : null;
+};
+
+// Функция для вставки баннеров в массив карточек
+const insertBanners = (cards) => {
+  const result = [...cards];
+  const positions = [];
+  
+  // Определяем позиции для баннеров (каждые 12 товаров)
+  for (let i = 11; i < result.length; i += 12) {
+    positions.push(i);
+  }
+
+  // Вставляем баннеры в случайные позиции
+  positions.forEach(position => {
+    const bannerSize = Math.random() < 0.3 ? 4 : Math.random() < 0.6 ? 2 : 1;
+    const banner = {
+      isBanner: true,
+      size: bannerSize,
+      link: "#",
+      imageUrl: "" // Пустая строка для использования плейсхолдера
+    };
+    result.splice(position, 0, banner);
+  });
+
+  return result;
 };
 
 const Category = (props) => {
@@ -108,32 +135,24 @@ const Category = (props) => {
     (async () => {
       const startIndex = (page - 1) * PORTION_OF_ITEMS;
       const newCards = await fetchCards(startIndex, PORTION_OF_ITEMS);
-      setCards(newCards);
+      // Добавляем баннеры к полученным карточкам
+      setCards(insertBanners(newCards));
     })();
   }, [page, fetchCards]);
-  //
-  // if (errorData) {
-  //   return <div className="loading">Загрузка...</div>;
-  // }
 
-  // Логика формирования блока номеров страниц:
-  // Для страниц 1–7 – кнопки 1,2,...,7; для страниц 8–15 – кнопки 8–15; и т.д.
+  // Логика формирования блока номеров страниц
   let blockStart, blockEnd;
   if (page <= 7) {
     blockStart = 1;
     blockEnd = 7;
   } else {
-    // Для страниц от 8 и далее блок вычисляется как:
-    // blockStart = (floor((page-8)/8) * 8) + 8, blockEnd = blockStart + 7
     blockStart = Math.floor((page - 8) / 8) * 8 + 8;
     blockEnd = blockStart + 7;
   }
-  // Если известна последняя страница, ограничиваем блок
   if (lastPage !== null) {
     blockEnd = Math.min(blockEnd, lastPage);
   }
 
-  // Стили для кнопок (круглые, фиолетовые, с отступом 4px, без дефолтных стилей)
   const buttonStyle = {
     margin: "4px",
     border: "none",
@@ -195,7 +214,6 @@ const Category = (props) => {
     );
   }
 
-  // Если данные ещё могут быть, показываем три точки и кнопку для перехода к следующему блоку
   let nextBlock = null;
   if (lastPage === null || blockEnd < lastPage) {
     nextBlock = (
@@ -217,6 +235,8 @@ const Category = (props) => {
 
   return (
     <div className="category_wrapper">
+      <TopBanner />
+      
       <Topbar
         search_mode={req_type === "Search"}
         cat_name={category_param ?? props.cat_name ?? "Новинки"}
@@ -230,20 +250,29 @@ const Category = (props) => {
 
       <div className="cards_wrapper">
         {cards ?
-          cards.map((elem) => (
-          <Card
-            key={elem.id}
-            id={elem.id}
-            name={elem.name}
-            cost={elem.price}
-            image={elem.image}
-            category={elem.category}
-            link={elem.url}
-            isFavoriteState={props.isFavoriteState}
-          />
-        ))
-        :
-        <p>Нет товаров</p>
+          cards.map((elem, index) => (
+            elem.isBanner ? (
+              <GridBanner
+                key={`banner-${index}`}
+                size={elem.size}
+                imageUrl={elem.imageUrl}
+                link={elem.link}
+              />
+            ) : (
+              <Card
+                key={elem.id}
+                id={elem.id}
+                name={elem.name}
+                cost={elem.price}
+                image={elem.image}
+                category={elem.category}
+                link={elem.url}
+                isFavoriteState={props.isFavoriteState}
+              />
+            )
+          ))
+          :
+          <p>Нет товаров</p>
         }
       </div>
 
