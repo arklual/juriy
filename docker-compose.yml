@@ -47,114 +47,114 @@ services:
       - pgdb
     restart: always
 
- frontend:
+  frontend:
    build: ./frontend
    ports:
      - '80:3000'
    restart: always
 
- cards-parser:
+  cards-parser:
    build: ./cards-parser
    depends_on:
      - backend
    restart: always
 
- parser1:
+  parser1:
    <<: *parser-template
    environment:
      - CNT=1
 
- parser2:
+  parser2:
    <<: *parser-template
    environment:
      - CNT=2
 
- parser3:
+  parser3:
    <<: *parser-template
    environment:
      - CNT=3
 
- parser4:
+  parser4:
    <<: *parser-template
    environment:
      - CNT=4
 
- parser5:
+  parser5:
    <<: *parser-template
    environment:
      - CNT=5
 
- parser6:
+  parser6:
    <<: *parser-template
    environment:
      - CNT=6
 
- parser7:
+  parser7:
    <<: *parser-template
    environment:
      - CNT=7
 
- parser8:
+  parser8:
    <<: *parser-template
    environment:
      - CNT=8
 
- parser9:
+  parser9:
    <<: *parser-template
    environment:
      - CNT=9
 
- parser10:
+  parser10:
    <<: *parser-template
    environment:
      - CNT=10
 
- middleware-parser1:
+  middleware-parser1:
    <<: *middleware-parser-template
    environment:
      - CNT=1
 
- middleware-parser2:
+  middleware-parser2:
    <<: *middleware-parser-template
    environment:
      - CNT=2
 
- middleware-parser3:
+  middleware-parser3:
    <<: *middleware-parser-template
    environment:
      - CNT=3
 
- middleware-parser4:
+  middleware-parser4:
    <<: *middleware-parser-template
    environment:
      - CNT=4
 
- middleware-parser5:
+  middleware-parser5:
    <<: *middleware-parser-template
    environment:
      - CNT=5
 
- middleware-parser6:
+  middleware-parser6:
    <<: *middleware-parser-template
    environment:
      - CNT=6
 
- middleware-parser7:
+  middleware-parser7:
    <<: *middleware-parser-template
    environment:
      - CNT=7
 
- middleware-parser8:
+  middleware-parser8:
    <<: *middleware-parser-template
    environment:
      - CNT=8
 
- middleware-parser9:
+  middleware-parser9:
    <<: *middleware-parser-template
    environment:
      - CNT=9
 
- middleware-parser10:
+  middleware-parser10:
    <<: *middleware-parser-template
    environment:
      - CNT=10
