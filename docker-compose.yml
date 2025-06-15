@@ -45,7 +45,7 @@ services:
       - LOG_POOLER_ERRORS=1
       - VERBOSE=1
       - LOG_FILE=/var/log/pgbouncer/pgbouncer.log
-      - PID_FILE=/var/run/pgbouncer/pgbouncer.pid
+      - PID_FILE=/tmp/pgbouncer.pid
     ports:
       - "6432:6432"
     depends_on:
@@ -54,7 +54,7 @@ services:
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - pgbouncer_logs:/var/log/pgbouncer
-      - pgbouncer_pid:/var/run/pgbouncer
+      - pgbouncer_tmp:/tmp
     user: "999:999"
     restart: always
 
@@ -186,12 +186,11 @@ volumes:
       type: none
       o: bind
       device: ${PWD}/logs/pgbouncer
-  pgbouncer_pid:
-    driver: local
+  pgbouncer_tmp:
+    driver: tmpfs
     driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/run/pgbouncer
+      mode: 1777
+      size: 10M
 
 networks:
   default:
