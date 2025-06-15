@@ -46,18 +46,33 @@ services:
       - VERBOSE=1
       - LOG_FILE=/var/log/pgbouncer/pgbouncer.log
       - PID_FILE=/tmp/pgbouncer.pid
+      - SERVER_RESET_QUERY=DISCARD ALL
+      - SERVER_CHECK_DELAY=30
+      - SERVER_CHECK_QUERY=select 1
+      - SERVER_LIFETIME=3600
+      - SERVER_IDLE_TIMEOUT=600
+      - CLIENT_IDLE_TIMEOUT=60
+      - IDLE_TRANSACTION_TIMEOUT=600
+      - QUERY_TIMEOUT=60
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits
     ports:
       - "6432:6432"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - pgbouncer_logs:/var/log/pgbouncer
-      - /tmp:/tmp:rw
     tmpfs:
       - /tmp:mode=1777,size=10M
     user: "999:999"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: always
 
   backend:
