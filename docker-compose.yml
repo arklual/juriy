@@ -54,7 +54,9 @@ services:
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - pgbouncer_logs:/var/log/pgbouncer
-      - pgbouncer_tmp:/tmp
+      - /tmp:/tmp:rw
+    tmpfs:
+      - /tmp:mode=1777,size=10M
     user: "999:999"
     restart: always
 
@@ -186,14 +188,3 @@ volumes:
       type: none
       o: bind
       device: ${PWD}/logs/pgbouncer
-  pgbouncer_tmp:
-    driver: tmpfs
-    driver_opts:
-      mode: 1777
-      size: 10M
-
-networks:
-  default:
-    driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
