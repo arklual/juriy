@@ -53,7 +53,7 @@ services:
       - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
       - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
       - pgbouncer_logs:/var/log/pgbouncer
-    user: "1000:1000"
+    user: "0:0"
     restart: always
 
   backend:
