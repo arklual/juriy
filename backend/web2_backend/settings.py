@@ -93,7 +93,7 @@ DATABASES = {
         'NAME': 'postgres', # Имя базы данных
         'USER': 'postgres', # Имя пользователя
         'PASSWORD': 'postgres', # Пароль пользователя
-        'HOST': 'pgdb', # Наименование контейнера для базы данных в Docker Compose
+        'HOST': 'postgres', # Наименование контейнера для базы данных в Docker Compose
         'PORT': '5432',  # Порт базы данных
     }
 }
