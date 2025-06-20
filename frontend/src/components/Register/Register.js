@@ -258,7 +258,7 @@ const Register = () => {
                 </div>
                 <div className='content_container'>
                     <h2>{step === 1 ? 'Регистрация' : 'Подтверждение email'}</h2>
-                    {!step ? (
+                    {step === 1 ? (
                         <form onSubmit={handleSubmit} noValidate>
                             <div className="input-group">
                                 <input

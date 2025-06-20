@@ -88,7 +88,18 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - '80:3000'
+      - "3000:3000"
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
     restart: always
 
   cards-parser:
@@ -199,6 +210,11 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/postgres_data
   pgbouncer_logs:
     driver: local
     driver_opts:

@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const baseUrl = "http://localhost:8080/api/";
+const baseUrl = "http://89.23.119.175:8080/api/";
 
 const Requests_API = async ({method = "GET", sub_url = "", params = {}, body = {}, headers = {}, timeout = 100000}) => {
   let raw_config = {

@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # Получаем параметры подключения из переменных окружения
 DB_USER = getenv("DB_USER", "postgres")
 DB_PASSWORD = getenv("DB_PASSWORD", "postgres")
-DB_HOST = getenv("DB_HOST", "localhost")
-DB_PORT = getenv("DB_PORT", "6432")  # Порт PgBouncer
+DB_HOST = getenv("DB_HOST", "postgres")  # Имя сервиса в Docker Compose
+DB_PORT = getenv("DB_PORT", "5432")  # Прямое подключение к PostgreSQL
 DB_NAME = getenv("DB_NAME", "postgres")
 
 # Формируем URL для подключения

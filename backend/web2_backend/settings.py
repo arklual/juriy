@@ -26,9 +26,16 @@ SECRET_KEY = 'django-insecure-)t5u4qjiw1x1*!1*%-m8ta&7!szddyms1pj4#)98yby24&9a8j
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_HEADERS = True
+CORS_ALLOW_ALL_METHODS = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:3000", "http://127.0.0.1:8080", "http://89.23.119.175:3000", "http://89.23.119.175:8080"]
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,14 +57,14 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'profiles.Profile'
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',  # Отключаем CSRF для API
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "corsheaders.middleware.CorsMiddleware"
 ]
 
 
@@ -95,6 +102,14 @@ DATABASES = {
         'PASSWORD': 'postgres', # Пароль пользователя
         'HOST': 'postgres', # Наименование контейнера для базы данных в Docker Compose
         'PORT': '5432',  # Порт базы данных
+        'CONN_MAX_AGE': 60,  # Максимальное время жизни соединения в секундах
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'client_encoding': 'UTF8',
+        },
+        'TEST': {
+            'NAME': 'test_postgres',
+        },
     }
 }
 

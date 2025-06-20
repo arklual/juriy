@@ -20,7 +20,7 @@ import urllib.parse
 from threading import Lock
 
 # Константы
-DELTA = 0.2
+DELTA = 0.1
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
